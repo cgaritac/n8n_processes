@@ -210,7 +210,3 @@ This project is available under the MIT License. Feel free to use, modify, and s
 - Workflow built with [n8n](https://n8n.io/)
 
 ---
-
-<p align="center">
-  <i>Gotta catch 'em all! 🎮</i>
-</p>
