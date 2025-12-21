@@ -6,8 +6,9 @@ A collection of **n8n automation workflow examples** ready to import and use. Th
 > [n8n](https://n8n.io/) is a powerful workflow automation tool that allows you to connect different services and automate tasks without writing code. This repository contains exportable workflows that you can import directly into your n8n instance.
 
 ![n8n](https://img.shields.io/badge/n8n-workflow-FF6D5A?style=for-the-badge&logo=n8n&logoColor=white)
-![Examples](https://img.shields.io/badge/Examples-2-blue?style=for-the-badge)
+![Examples](https://img.shields.io/badge/Examples-3-blue?style=for-the-badge)
 ![Google Sheets](https://img.shields.io/badge/Google%20Sheets-34A853?style=for-the-badge&logo=google-sheets&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 
 ---
 
@@ -16,7 +17,8 @@ A collection of **n8n automation workflow examples** ready to import and use. Th
 | # | Workflow | File | Description |
 |---|----------|------|-------------|
 | 1 | [Pokemon Scraper](#-pokemon-scraper) | `Pokemon Scraper.json` | Fetches Pokémon data from PokéAPI and stores it in Google Sheets |
-| 2 | [Forms - T-Shirt](#-forms---t-shirt) | `Forms - T-Shirt.json` | Manages t-shirt orders from Google Forms with inventory control |
+| 2 | [Forms - T-Shirt](#-forms---t-shirt) | `Forms - T-Shirt.json` | Manages t-shirt orders from Google Forms with inventory control (Google Sheets) |
+| 3 | [T-Shirts - PostgreSQL](#-t-shirts---postgresql) | `T-Shirts - PostgreSQL.json` | Manages t-shirt orders with PostgreSQL database for inventory |
 
 ---
 
@@ -110,7 +112,7 @@ Your spreadsheet must have the following columns:
 
 # 👕 Forms - T-Shirt
 
-An **n8n automation workflow** that manages t-shirt orders from a Google Form, verifies available stock, and sends email notifications.
+An **n8n automation workflow** that manages t-shirt orders from a Google Form, verifies available stock using Google Sheets, and sends email notifications.
 
 ## 📋 Description
 
@@ -119,7 +121,7 @@ This n8n workflow automates the following process:
 1. **Detect new responses** in a Google Form (Google Sheets Trigger)
 2. **Read t-shirt requests** from Google Sheets
 3. **Filter** unverified records
-4. **Get current inventory** of t-shirt stock
+4. **Get current inventory** of t-shirt stock from Google Sheets
 5. **Process orders** by checking availability per size
 6. **Update responses** marking orders as verified
 7. **Update inventory** reducing stock
@@ -196,6 +198,135 @@ This n8n workflow automates the following process:
 
 ---
 
+# 🐘 T-Shirts - PostgreSQL
+
+An **n8n automation workflow** that manages t-shirt orders from a Google Form, verifies available stock using a **PostgreSQL database**, and sends email notifications. This is an alternative to the Google Sheets version, demonstrating database integration.
+
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+
+## 📋 Description
+
+This n8n workflow automates the following process:
+
+1. **Detect new responses** in a Google Form (Google Sheets Trigger)
+2. **Filter** unverified records
+3. **Loop over each request** processing them one by one
+4. **Query PostgreSQL** to check inventory by size
+5. **Verify stock availability** and branch accordingly
+6. **Update PostgreSQL** reducing stock for successful orders
+7. **Update Google Sheets** marking orders as verified or rejected
+8. **Send email** with a summary of processed requests
+
+## 🔄 Workflow Flow
+
+```
+┌──────────────────┐    ┌────────────────┐    ┌──────────────────┐
+│ Google Sheets    │───▶│ Filter No Data │───▶│ Loop Over New    │
+│ Trigger          │    │ Entries        │    │ Requests         │
+└──────────────────┘    └────────────────┘    └──────────────────┘
+                                                      │
+                        ┌─────────────────────────────┼─────────────────────┐
+                        │                             │                     │
+                        ▼                             ▼                     │
+              ┌──────────────────┐         ┌──────────────────┐            │
+              │ Aggregate Work   │         │ Get Inventory    │            │
+              │                  │         │ By Size (SQL)    │            │
+              └──────────────────┘         └──────────────────┘            │
+                        │                             │                     │
+                        ▼                             ▼                     │
+              ┌──────────────────┐         ┌──────────────────┐            │
+              │ Send Email       │         │ Have Stock?      │            │
+              │ (Gmail)          │         │ (IF Condition)   │            │
+              └──────────────────┘         └──────────────────┘            │
+                                                  │    │                   │
+                                    ┌─────────────┘    └──────────┐        │
+                                    ▼                             ▼        │
+                          ┌──────────────────┐         ┌──────────────────┐│
+                          │ Subtract Stock   │         │ Update Answers   ││
+                          │ (Set Node)       │         │ Without Stock    ││
+                          └──────────────────┘         └──────────────────┘│
+                                    │                             │        │
+                                    ▼                             │        │
+                          ┌──────────────────┐                    │        │
+                          │ Update Stock DB  │                    │        │
+                          │ (PostgreSQL)     │                    │        │
+                          └──────────────────┘                    │        │
+                                    │                             │        │
+                                    ▼                             │        │
+                          ┌──────────────────┐                    │        │
+                          │ Update Answers   │                    │        │
+                          │ (Google Sheets)  │                    │        │
+                          └──────────────────┘                    │        │
+                                    │                             │        │
+                                    ▼                             ▼        │
+                          ┌──────────────────┐◀───────────────────┘        │
+                          │ Loop End         │─────────────────────────────┘
+                          └──────────────────┘
+```
+
+## 📊 Data Structures
+
+### Google Sheets - Responses (T-Shirt - Responses)
+
+| Column | Description |
+|--------|-------------|
+| `Marca temporal` | Form submission timestamp |
+| `Dirección de correo electrónico` | Requester's email |
+| `Name` | Requester's name |
+| `Shirt size` | Requested size (S, M, L, XL, etc.) |
+| `Aditional comments` | Additional comments |
+| `Verified` | Verification status (TRUE/FALSE) |
+| `Verification date` | Verification date |
+
+### PostgreSQL - Inventory Table
+
+```sql
+CREATE TABLE inventory (
+    id SERIAL PRIMARY KEY,
+    product_name VARCHAR(255),
+    size VARCHAR(10),
+    in_stock INTEGER
+);
+```
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | SERIAL | Primary key |
+| `product_name` | VARCHAR | Product name |
+| `size` | VARCHAR | Size (S, M, L, XL, etc.) |
+| `in_stock` | INTEGER | Available quantity |
+
+## ⚙️ Credential Configuration
+
+### 🔐 Required Credentials
+
+| Parameter | Placeholder | Description |
+|-----------|-------------|-------------|
+| **Google Sheet Responses ID** | `YOUR_GOOGLE_SHEET_RESPONSES_ID` | Form responses document ID* |
+| **Google Sheets Credential ID** | `YOUR_GOOGLE_SHEETS_CREDENTIAL_ID` | Google Sheets OAuth2 credential ID |
+| **Google Sheets Trigger Credential ID** | `YOUR_GOOGLE_SHEETS_TRIGGER_CREDENTIAL_ID` | Trigger OAuth2 credential ID |
+| **PostgreSQL Credential ID** | `YOUR_POSTGRES_CREDENTIAL_ID` | PostgreSQL credential ID |
+| **PostgreSQL Database Name** | `your-database-name` | Name for your PostgreSQL connection |
+| **Gmail Credential ID** | `YOUR_GMAIL_CREDENTIAL_ID` | Gmail OAuth2 credential ID |
+| **Email** | `your-email@example.com` | Email for credentials and recipient |
+| **Webhook ID** | `YOUR_WEBHOOK_ID` | Webhook ID (generated by n8n) |
+| **Instance ID** | `YOUR_INSTANCE_ID` | Your n8n instance ID |
+
+> **\*** The Google Sheet ID can be found in the document URL:  
+> `https://docs.google.com/spreadsheets/d/`**`THIS_IS_THE_ID`**`/edit`
+
+### PostgreSQL Connection
+
+To configure PostgreSQL in n8n, you'll need:
+- **Host**: Your database host (e.g., `db.neon.tech`)
+- **Database**: Database name
+- **User**: Database username
+- **Password**: Database password
+- **Port**: Usually `5432`
+- **SSL**: Enable if required (recommended for cloud databases)
+
+---
+
 # 🛠️ General Requirements
 
 - [n8n](https://n8n.io/) (self-hosted or cloud)
@@ -203,6 +334,7 @@ This n8n workflow automates the following process:
   - Google Sheets API
   - Gmail API
 - OAuth2 credentials configured in n8n
+- PostgreSQL database (for T-Shirts - PostgreSQL workflow)
 
 ---
 
@@ -215,7 +347,7 @@ This n8n workflow automates the following process:
 - 📊 Build complex workflows visually
 - 💻 Self-host for complete data control
 
-These workflows demonstrate n8n's capability to integrate multiple services (Google Sheets, external APIs, Gmail) into seamless automation pipelines.
+These workflows demonstrate n8n's capability to integrate multiple services (Google Sheets, external APIs, Gmail, PostgreSQL) into seamless automation pipelines.
 
 ---
 
