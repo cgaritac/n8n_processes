@@ -6,9 +6,10 @@ A collection of **n8n automation workflow examples** ready to import and use. Th
 > [n8n](https://n8n.io/) is a powerful workflow automation tool that allows you to connect different services and automate tasks without writing code. This repository contains exportable workflows that you can import directly into your n8n instance.
 
 ![n8n](https://img.shields.io/badge/n8n-workflow-FF6D5A?style=for-the-badge&logo=n8n&logoColor=white)
-![Examples](https://img.shields.io/badge/Examples-3-blue?style=for-the-badge)
+![Examples](https://img.shields.io/badge/Examples-4-blue?style=for-the-badge)
 ![Google Sheets](https://img.shields.io/badge/Google%20Sheets-34A853?style=for-the-badge&logo=google-sheets&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![Discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)
 
 ---
 
@@ -19,6 +20,7 @@ A collection of **n8n automation workflow examples** ready to import and use. Th
 | 1 | [Pokemon Scraper](#-pokemon-scraper) | `Pokemon Scraper.json` | Fetches Pokémon data from PokéAPI and stores it in Google Sheets |
 | 2 | [Forms - T-Shirt](#-forms---t-shirt) | `Forms - T-Shirt.json` | Manages t-shirt orders from Google Forms with inventory control (Google Sheets) |
 | 3 | [T-Shirts - PostgreSQL](#-t-shirts---postgresql) | `T-Shirts - PostgreSQL.json` | Manages t-shirt orders with PostgreSQL database for inventory |
+| 4 | [Time Off](#-time-off) | `Time Off.json` | Employee vacation request system with HR approval via Discord |
 
 ---
 
@@ -327,14 +329,176 @@ To configure PostgreSQL in n8n, you'll need:
 
 ---
 
+# 🏖️ Time Off
+
+An **n8n automation workflow** that manages employee vacation/time-off requests with a complete approval flow. Features a custom form, multiple validations, Discord notifications to HR, and automatic calendar event creation.
+
+![Discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![Google Calendar](https://img.shields.io/badge/Google%20Calendar-4285F4?style=for-the-badge&logo=google-calendar&logoColor=white)
+
+## 📋 Description
+
+This n8n workflow automates the complete vacation request process:
+
+1. **Employee submits request** via n8n Form Trigger (custom styled form)
+2. **Validate request timing** (must be 7+ days in advance)
+3. **Validate date range** (end date must be after start date)
+4. **Check available days** in PostgreSQL database
+5. **Notify HR via Discord** with request details and approval link
+6. **Wait for HR response** (48-hour timeout with approval form)
+7. **If approved**: Create Google Calendar event + Update database + Send confirmation email
+8. **If rejected**: Send rejection email with reason
+
+## 🔄 Workflow Flow
+
+```
+┌──────────────────┐    ┌────────────────────┐    ┌────────────────────┐
+│ Form Trigger     │───▶│ Get Request        │───▶│ Is It Higher Than  │
+│ (Time Request)   │    │ Variables          │    │ 7 Days?            │
+└──────────────────┘    └────────────────────┘    └────────────────────┘
+                                                          │
+                                    ┌─────────────────────┴─────────────────────┐
+                                    │ YES                                   NO  │
+                                    ▼                                           ▼
+                          ┌──────────────────┐                    ┌──────────────────┐
+                          │ Dates Ok?        │                    │ Add Error -      │
+                          │ (End > Start)    │                    │ Request Time     │
+                          └──────────────────┘                    └──────────────────┘
+                                    │                                           │
+                    ┌───────────────┴───────────────┐                          │
+                    │ YES                       NO  │                          │
+                    ▼                               ▼                          │
+          ┌──────────────────┐         ┌──────────────────┐                   │
+          │ Get Free Days    │         │ Add Error -      │                   │
+          │ (PostgreSQL)     │         │ Wrong Dates      │                   │
+          └──────────────────┘         └──────────────────┘                   │
+                    │                               │                          │
+                    ▼                               │                          │
+          ┌──────────────────┐                     │                          │
+          │ Have Enough      │                     │                          │
+          │ Vacations?       │                     │                          │
+          └──────────────────┘                     │                          │
+                    │                               │                          │
+        ┌───────────┴───────────┐                  │                          │
+        │ YES               NO  │                  │                          │
+        ▼                       ▼                  │                          │
+┌──────────────┐    ┌──────────────────┐          │                          │
+│ Discord      │    │ Add Error -      │          │                          │
+│ (Notify HR)  │    │ Not Enough Days  │          │                          │
+└──────────────┘    └──────────────────┘          │                          │
+        │                       │                  │                          │
+        ▼                       └──────────────────┴──────────────────────────┤
+┌──────────────────┐                                                          │
+│ Wait HR Response │                                                          │
+│ (48 Hours Form)  │                                                          │
+└──────────────────┘                                                          │
+        │                                                                     │
+        ▼                                                                     │
+┌──────────────────┐                                                          │
+│ Request          │                                                          │
+│ Approved?        │                                                          │
+└──────────────────┘                                                          │
+        │                                                                     │
+    ┌───┴───────────────┐                                                     │
+    │ YES           NO  │                                                     │
+    ▼                   ▼                                                     │
+┌────────────┐  ┌──────────────┐                                             │
+│ Create     │  │ Add Error -  │                                             │
+│ Calendar   │  │ Rejected     │                                             │
+│ Event      │  └──────────────┘                                             │
+└────────────┘          │                                                     │
+    │                   ▼                                                     │
+    ▼           ┌──────────────┐                    ┌──────────────────┐     │
+┌────────────┐  │ Send HR      │◀───────────────────│ Send Reject      │◀────┘
+│ Update     │  │ Reject Email │                    │ Message          │
+│ Vacation   │  └──────────────┘                    └──────────────────┘
+│ Days (DB)  │
+└────────────┘
+    │
+    ▼
+┌────────────┐
+│ Send HR    │
+│ Approve    │
+│ Email      │
+└────────────┘
+```
+
+## 📊 Data Structures
+
+### n8n Form Fields (Request Form)
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `Full Name` | Text | Yes | Employee's full name |
+| `Email` | Email | Yes | Employee's email address |
+| `Start date` | Date | Yes | First day of time off |
+| `End date` | Date | Yes | Last day of time off |
+| `Comments` | Textarea | No | Additional request comments |
+
+### PostgreSQL - Days Off Table
+
+```sql
+CREATE TABLE days_off (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE,
+    vacation_days INTEGER,
+    sick_days INTEGER
+);
+```
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | SERIAL | Primary key |
+| `email` | VARCHAR | Employee's email (unique) |
+| `vacation_days` | INTEGER | Available vacation days |
+| `sick_days` | INTEGER | Available sick days |
+
+## ⚙️ Credential Configuration
+
+### 🔐 Required Credentials
+
+| Parameter | Placeholder | Description |
+|-----------|-------------|-------------|
+| **PostgreSQL Credential ID** | `YOUR_POSTGRES_CREDENTIAL_ID` | PostgreSQL credential ID |
+| **PostgreSQL Database Name** | `your-database-name` | Name for your PostgreSQL connection |
+| **Gmail Credential ID** | `YOUR_GMAIL_CREDENTIAL_ID` | Gmail OAuth2 credential ID |
+| **Google Calendar Credential ID** | `YOUR_GOOGLE_CALENDAR_CREDENTIAL_ID` | Google Calendar OAuth2 credential ID |
+| **Calendar Email** | `your-email@example.com` | Calendar to create events in |
+| **Form Webhook ID** | `YOUR_FORM_WEBHOOK_ID` | Form Trigger webhook ID |
+| **Discord Webhook ID** | `YOUR_DISCORD_WEBHOOK_ID` | Discord notification webhook ID |
+| **Wait Webhook ID** | `YOUR_WAIT_WEBHOOK_ID` | Wait node webhook ID |
+| **Gmail Webhook ID** | `YOUR_GMAIL_WEBHOOK_ID` | Gmail webhook ID |
+| **Instance ID** | `YOUR_INSTANCE_ID` | Your n8n instance ID |
+
+### Discord Configuration
+
+This workflow uses Discord webhook authentication. To set it up:
+1. Go to your Discord server settings
+2. Navigate to **Integrations** → **Webhooks**
+3. Create a new webhook for your HR channel
+4. Copy the webhook URL and configure it in the Discord node
+
+### Validation Rules
+
+The workflow includes these built-in validations:
+- ⏰ Request must be submitted at least **7 days** before start date
+- 📅 End date must be **after** start date
+- 🏖️ Employee must have **enough vacation days** available
+- ⏳ HR has **48 hours** to respond before request times out
+
+---
+
 # 🛠️ General Requirements
 
 - [n8n](https://n8n.io/) (self-hosted or cloud)
 - Google account with access to:
   - Google Sheets API
   - Gmail API
+  - Google Calendar API (for Time Off workflow)
 - OAuth2 credentials configured in n8n
-- PostgreSQL database (for T-Shirts - PostgreSQL workflow)
+- PostgreSQL database (for T-Shirts - PostgreSQL and Time Off workflows)
+- Discord webhook (for Time Off workflow)
 
 ---
 
@@ -347,7 +511,7 @@ To configure PostgreSQL in n8n, you'll need:
 - 📊 Build complex workflows visually
 - 💻 Self-host for complete data control
 
-These workflows demonstrate n8n's capability to integrate multiple services (Google Sheets, external APIs, Gmail, PostgreSQL) into seamless automation pipelines.
+These workflows demonstrate n8n's capability to integrate multiple services (Google Sheets, external APIs, Gmail, PostgreSQL, Discord, Google Calendar) into seamless automation pipelines.
 
 ---
 
