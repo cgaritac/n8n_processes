@@ -6,7 +6,7 @@ A collection of **n8n automation workflow examples** ready to import and use. Th
 > [n8n](https://n8n.io/) is a powerful workflow automation tool that allows you to connect different services and automate tasks without writing code. This repository contains exportable workflows that you can import directly into your n8n instance.
 
 ![n8n](https://img.shields.io/badge/n8n-workflow-FF6D5A?style=for-the-badge&logo=n8n&logoColor=white)
-![Examples](https://img.shields.io/badge/Examples-4-blue?style=for-the-badge)
+![Examples](https://img.shields.io/badge/Examples-5-blue?style=for-the-badge)
 ![Google Sheets](https://img.shields.io/badge/Google%20Sheets-34A853?style=for-the-badge&logo=google-sheets&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)
@@ -20,7 +20,8 @@ A collection of **n8n automation workflow examples** ready to import and use. Th
 | 1 | [Pokemon Scraper](#-pokemon-scraper) | `Pokemon Scraper.json` | Fetches Pokémon data from PokéAPI and stores it in Google Sheets |
 | 2 | [Forms - T-Shirt](#-forms---t-shirt) | `Forms - T-Shirt.json` | Manages t-shirt orders from Google Forms with inventory control (Google Sheets) |
 | 3 | [T-Shirts - PostgreSQL](#-t-shirts---postgresql) | `T-Shirts - PostgreSQL.json` | Manages t-shirt orders with PostgreSQL database for inventory |
-| 4 | [Time Off](#-time-off) | `Time Off.json` | Employee vacation request system with HR approval via Discord |
+| 4 | [Time Off](#-time-off) | `Time Off.json` | Employee vacation request system with HR approval via Discord (Form Trigger) |
+| 5 | [Time Off Webhook](#-time-off-webhook) | `Time Off Webhook.json` | Employee vacation request system with HTTP Webhook API trigger |
 
 ---
 
@@ -489,16 +490,190 @@ The workflow includes these built-in validations:
 
 ---
 
+# 🔗 Time Off Webhook
+
+An **n8n automation workflow** similar to Time Off, but triggered via an **HTTP Webhook API** instead of a form. This version is ideal for integrating vacation requests from external systems, mobile apps, or custom frontends.
+
+![Webhook](https://img.shields.io/badge/Webhook-API-orange?style=for-the-badge)
+![Discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![Google Calendar](https://img.shields.io/badge/Google%20Calendar-4285F4?style=for-the-badge&logo=google-calendar&logoColor=white)
+
+## 📋 Description
+
+This n8n workflow provides an API endpoint for vacation requests:
+
+1. **Receive POST request** via HTTP Webhook with header authentication
+2. **Validate request body** using JavaScript (name, email, dates format)
+3. **Return HTTP response** (200 OK or 400 Bad Request with errors)
+4. **Validate request timing** (must be 7+ days in advance)
+5. **Validate date range** (end date must be after start date)
+6. **Check available days** in PostgreSQL database
+7. **Notify HR via Discord** with request details and approval link
+8. **Wait for HR response** (48-hour timeout via webhook callback)
+9. **If approved**: Create Google Calendar event + Update database + Send confirmation email
+10. **If rejected**: Send rejection email with reason
+
+## 🔄 Workflow Flow
+
+```
+┌──────────────────┐    ┌────────────────────┐    ┌────────────────────┐
+│ Webhook POST     │───▶│ Validate Webhook   │───▶│ Has Necessary      │
+│ (API Trigger)    │    │ Data (JavaScript)  │    │ Fields?            │
+└──────────────────┘    └────────────────────┘    └────────────────────┘
+                                                          │
+                                    ┌─────────────────────┴─────────────────────┐
+                                    │ YES                                   NO  │
+                                    ▼                                           ▼
+                          ┌──────────────────┐                    ┌──────────────────┐
+                          │ Respond 200 OK   │                    │ Respond 400      │
+                          │                  │                    │ Bad Request      │
+                          └──────────────────┘                    └──────────────────┘
+                                    │
+                                    ▼
+                          ┌──────────────────┐
+                          │ Get Request      │
+                          │ Variables        │
+                          └──────────────────┘
+                                    │
+                                    ▼
+                    (Same flow as Time Off workflow)
+                                    │
+                                    ▼
+                          ┌──────────────────┐
+                          │ Validations →    │
+                          │ HR Approval →    │
+                          │ Calendar + Email │
+                          └──────────────────┘
+```
+
+## 📊 API Specification
+
+### Endpoint
+
+```
+POST /webhook/vacation/ask/form/001
+```
+
+### Headers
+
+| Header | Required | Description |
+|--------|----------|-------------|
+| `Authorization` | Yes | Header authentication token |
+
+### Request Body
+
+```json
+{
+  "Full Name": "John Doe",
+  "Email": "john.doe@company.com",
+  "Start date": "2025-01-15",
+  "End date": "2025-01-20",
+  "Comments": "Family vacation (optional)"
+}
+```
+
+### Response - Success (200)
+
+```json
+{
+  "valid": true,
+  "status": 200,
+  "data": {
+    "fullName": "John Doe",
+    "email": "john.doe@company.com",
+    "startDate": "2025-01-15",
+    "endDate": "2025-01-20",
+    "comments": "Family vacation"
+  }
+}
+```
+
+### Response - Error (400)
+
+```json
+{
+  "valid": false,
+  "status": 400,
+  "errors": [
+    "Name is required.",
+    "Start date needs to have a format: YYYY-MM-DD."
+  ]
+}
+```
+
+### Validation Rules (API Level)
+
+- ✅ `Full Name` - Required, non-empty
+- ✅ `Email` - Required, valid email format
+- ✅ `Start date` - Required, format YYYY-MM-DD
+- ✅ `End date` - Required, format YYYY-MM-DD, must be after start date
+- ✅ `Comments` - Optional, max 500 characters
+
+## 📊 Data Structures
+
+### PostgreSQL - Days Off Table
+
+```sql
+CREATE TABLE days_off (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE,
+    vacation_days INTEGER,
+    sick_days INTEGER
+);
+```
+
+## ⚙️ Credential Configuration
+
+### 🔐 Required Credentials
+
+| Parameter | Placeholder | Description |
+|-----------|-------------|-------------|
+| **Header Auth Credential ID** | `YOUR_HEADER_AUTH_CREDENTIAL_ID` | HTTP Header authentication credential |
+| **PostgreSQL Credential ID** | `YOUR_POSTGRES_CREDENTIAL_ID` | PostgreSQL credential ID |
+| **PostgreSQL Database Name** | `your-database-name` | Name for your PostgreSQL connection |
+| **Gmail Credential ID** | `YOUR_GMAIL_CREDENTIAL_ID` | Gmail OAuth2 credential ID |
+| **Google Calendar Credential ID** | `YOUR_GOOGLE_CALENDAR_CREDENTIAL_ID` | Google Calendar OAuth2 credential ID |
+| **Calendar Email** | `your-email@example.com` | Calendar to create events in |
+| **HTTP Webhook ID** | `YOUR_HTTP_WEBHOOK_ID` | Main webhook endpoint ID |
+| **Form Webhook ID** | `YOUR_FORM_WEBHOOK_ID` | Form Trigger webhook ID (disabled) |
+| **Discord Webhook ID** | `YOUR_DISCORD_WEBHOOK_ID` | Discord notification webhook ID |
+| **Wait Webhook ID** | `YOUR_WAIT_WEBHOOK_ID` | Wait node webhook ID |
+| **Gmail Webhook ID** | `YOUR_GMAIL_WEBHOOK_ID` | Gmail webhook ID |
+| **Instance ID** | `YOUR_INSTANCE_ID` | Your n8n instance ID |
+
+### Header Authentication Setup
+
+1. In n8n, go to **Credentials** → **New**
+2. Select **Header Auth**
+3. Configure:
+   - **Name**: `Header Auth Secret`
+   - **Header Name**: Your header name (e.g., `X-API-Key`)
+   - **Header Value**: Your secret token
+
+### Differences from Time Off (Form Version)
+
+| Feature | Time Off | Time Off Webhook |
+|---------|----------|------------------|
+| **Trigger** | n8n Form | HTTP POST Webhook |
+| **Input Validation** | n8n Form validation | JavaScript validation |
+| **Response** | Form submission page | JSON response |
+| **Authentication** | None (public form) | Header authentication |
+| **HR Approval Wait** | Form-based | Webhook callback |
+| **Use Case** | Employee self-service | System integration |
+
+---
+
 # 🛠️ General Requirements
 
 - [n8n](https://n8n.io/) (self-hosted or cloud)
 - Google account with access to:
   - Google Sheets API
   - Gmail API
-  - Google Calendar API (for Time Off workflow)
+  - Google Calendar API (for Time Off workflows)
 - OAuth2 credentials configured in n8n
 - PostgreSQL database (for T-Shirts - PostgreSQL and Time Off workflows)
-- Discord webhook (for Time Off workflow)
+- Discord webhook (for Time Off workflows)
 
 ---
 
