@@ -6,10 +6,11 @@ A collection of **n8n automation workflow examples** ready to import and use. Th
 > [n8n](https://n8n.io/) is a powerful workflow automation tool that allows you to connect different services and automate tasks without writing code. This repository contains exportable workflows that you can import directly into your n8n instance.
 
 ![n8n](https://img.shields.io/badge/n8n-workflow-FF6D5A?style=for-the-badge&logo=n8n&logoColor=white)
-![Examples](https://img.shields.io/badge/Examples-5-blue?style=for-the-badge)
+![Examples](https://img.shields.io/badge/Examples-6-blue?style=for-the-badge)
 ![Google Sheets](https://img.shields.io/badge/Google%20Sheets-34A853?style=for-the-badge&logo=google-sheets&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)
+![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white)
 
 ---
 
@@ -22,6 +23,7 @@ A collection of **n8n automation workflow examples** ready to import and use. Th
 | 3 | [T-Shirts - PostgreSQL](#-t-shirts---postgresql) | `T-Shirts - PostgreSQL.json` | Manages t-shirt orders with PostgreSQL database for inventory |
 | 4 | [Time Off](#-time-off) | `Time Off.json` | Employee vacation request system with HR approval via Discord (Form Trigger) |
 | 5 | [Time Off Webhook](#-time-off-webhook) | `Time Off Webhook.json` | Employee vacation request system with HTTP Webhook API trigger |
+| 6 | [Scraping - Curso](#-scraping---curso) | `Scraping - Curso.json` | Web scraping with AI extraction for course data from websites |
 
 ---
 
@@ -664,6 +666,151 @@ CREATE TABLE days_off (
 
 ---
 
+# 🕷️ Scraping - Curso
+
+An **n8n automation workflow** that performs **web scraping with AI-powered data extraction** for online courses. It scrapes course websites, uses **OpenAI** to extract structured information, fetches additional data from Udemy using **Firecrawl**, and stores everything in **Google Sheets** and **Google Docs**.
+
+![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white)
+![Firecrawl](https://img.shields.io/badge/Firecrawl-FF6B35?style=for-the-badge)
+![Google Sheets](https://img.shields.io/badge/Google%20Sheets-34A853?style=for-the-badge&logo=google-sheets&logoColor=white)
+![Google Docs](https://img.shields.io/badge/Google%20Docs-4285F4?style=for-the-badge&logo=google-docs&logoColor=white)
+
+## 📋 Description
+
+This n8n workflow automates the process of extracting course information from websites:
+
+1. **Read websites list** from Google Sheets (can run on schedule or manually)
+2. **Filter websites** that have valid URLs
+3. **Fetch HTML** from each website
+4. **Convert to Markdown** for easier AI processing
+5. **Send to OpenAI** (o3-mini) to extract structured course data
+6. **Parse and aggregate** the extracted information
+7. **Update Google Sheets** with course details (name, instructor, URLs, description)
+8. **Scrape Udemy** using Firecrawl for additional course details
+9. **Create Google Doc** for each course syllabus
+10. **Use OpenAI** again to format syllabus content
+11. **Update Google Doc** with formatted syllabus
+
+## 🔄 Workflow Flow
+
+```
+┌──────────────────┐    ┌──────────────────┐    ┌────────────────┐
+│ Schedule/Manual  │───▶│ Get Websites     │───▶│ Filter Valid   │
+│ Trigger          │    │ (Google Sheets)  │    │ URLs           │
+└──────────────────┘    └──────────────────┘    └────────────────┘
+                                                        │
+                                                        ▼
+┌──────────────────┐    ┌──────────────────┐    ┌────────────────┐
+│ OpenAI Extract   │◀───│ Convert to       │◀───│ HTTP Request   │
+│ Course Data      │    │ Markdown         │    │ (Get HTML)     │
+└──────────────────┘    └──────────────────┘    └────────────────┘
+        │
+        ▼
+┌──────────────────┐    ┌──────────────────┐    ┌────────────────┐
+│ Parse JSON &     │───▶│ Split Courses    │───▶│ Update Google  │
+│ Aggregate        │    │ (Loop)           │    │ Sheets         │
+└──────────────────┘    └──────────────────┘    └────────────────┘
+                                                        │
+                                                        ▼
+┌──────────────────┐    ┌──────────────────┐    ┌────────────────┐
+│ OpenAI Format    │◀───│ Create Google    │◀───│ Firecrawl      │
+│ Syllabus         │    │ Doc              │    │ (Scrape Udemy) │
+└──────────────────┘    └──────────────────┘    └────────────────┘
+        │
+        ▼
+┌──────────────────┐    ┌──────────────────┐
+│ Update Google    │───▶│ Update Syllabus  │
+│ Doc Content      │    │ URL in Sheets    │
+└──────────────────┘    └──────────────────┘
+```
+
+## 📊 Data Structures
+
+### Google Sheets - Websites to Search
+
+| Column | Description |
+|--------|-------------|
+| `Website` | URL of the website to scrape |
+
+### Google Sheets - Results
+
+| Column | Description |
+|--------|-------------|
+| `Course name` | Name of the course |
+| `Teacher` | Instructor's name |
+| `DevTalles` | DevTalles course URL |
+| `Udemy` | Udemy course URL |
+| `Description` | Course description |
+| `GoogleDocs - Syllabus` | Link to generated syllabus document |
+
+### AI-Extracted Data Structure
+
+```json
+{
+  "courseName": "Course Title",
+  "instructor": "Instructor Name",
+  "devtallesUrl": "https://devtalles.com/...",
+  "udemyUrl": "https://udemy.com/...",
+  "description": "Course description...",
+  "category": "Programming",
+  "additionalInformation": "Extra details..."
+}
+```
+
+## ⚙️ Credential Configuration
+
+### 🔐 Required Credentials
+
+| Parameter | Placeholder | Description |
+|-----------|-------------|-------------|
+| **Google Sheet ID** | `YOUR_GOOGLE_SHEET_ID` | Google Sheets document ID* |
+| **Google Sheets Credential ID** | `YOUR_GOOGLE_SHEETS_CREDENTIAL_ID` | Google Sheets OAuth2 credential ID |
+| **OpenAI Credential ID** | `YOUR_OPENAI_CREDENTIAL_ID` | OpenAI API credential ID |
+| **Firecrawl Credential ID** | `YOUR_FIRECRAWL_CREDENTIAL_ID` | Firecrawl API credential ID |
+| **Firecrawl API Key** | `YOUR_FIRECRAWL_API_KEY` | Firecrawl API key (for HTTP requests) |
+| **Google Docs Credential ID** | `YOUR_GOOGLE_DOCS_CREDENTIAL_ID` | Google Docs OAuth2 credential ID |
+| **Google Drive Folder ID** | `YOUR_GOOGLE_DRIVE_FOLDER_ID` | Folder ID for created documents |
+| **Instance ID** | `YOUR_INSTANCE_ID` | Your n8n instance ID |
+
+> **\*** The Google Sheet ID can be found in the document URL:  
+> `https://docs.google.com/spreadsheets/d/`**`THIS_IS_THE_ID`**`/edit`
+
+### OpenAI Configuration
+
+This workflow uses the **o3-mini** model for:
+1. Extracting structured course data from scraped content
+2. Formatting syllabus content for Google Docs
+
+Configure in n8n:
+1. Go to **Credentials** → **New**
+2. Select **OpenAI**
+3. Add your OpenAI API key
+
+### Firecrawl Configuration
+
+[Firecrawl](https://firecrawl.dev/) is used to scrape Udemy pages (which have anti-scraping protection):
+
+1. Sign up at [firecrawl.dev](https://firecrawl.dev/)
+2. Get your API key
+3. Configure in n8n Credentials
+
+### Google Drive Folder
+
+The workflow creates Google Docs for each course syllabus. Configure:
+- Create a folder in Google Drive
+- Get the folder ID from the URL: `https://drive.google.com/drive/folders/`**`FOLDER_ID`**
+- Update the `folderId` parameter
+
+### Features
+
+- 🕒 **Scheduled execution** - Can run automatically on a schedule
+- 🔄 **Manual trigger** - Also supports manual execution
+- 🤖 **AI-powered extraction** - Uses OpenAI for intelligent data extraction
+- 🛡️ **Anti-scraping bypass** - Firecrawl handles protected sites like Udemy
+- 📄 **Document generation** - Automatically creates formatted Google Docs
+
+---
+
 # 🛠️ General Requirements
 
 - [n8n](https://n8n.io/) (self-hosted or cloud)
@@ -671,9 +818,13 @@ CREATE TABLE days_off (
   - Google Sheets API
   - Gmail API
   - Google Calendar API (for Time Off workflows)
+  - Google Docs API (for Scraping - Curso workflow)
+  - Google Drive API (for Scraping - Curso workflow)
 - OAuth2 credentials configured in n8n
 - PostgreSQL database (for T-Shirts - PostgreSQL and Time Off workflows)
 - Discord webhook (for Time Off workflows)
+- OpenAI API key (for Scraping - Curso workflow)
+- Firecrawl API key (for Scraping - Curso workflow)
 
 ---
 
@@ -686,7 +837,7 @@ CREATE TABLE days_off (
 - 📊 Build complex workflows visually
 - 💻 Self-host for complete data control
 
-These workflows demonstrate n8n's capability to integrate multiple services (Google Sheets, external APIs, Gmail, PostgreSQL, Discord, Google Calendar) into seamless automation pipelines.
+These workflows demonstrate n8n's capability to integrate multiple services (Google Sheets, external APIs, Gmail, PostgreSQL, Discord, Google Calendar, OpenAI, Firecrawl, Google Docs) into seamless automation pipelines.
 
 ---
 
