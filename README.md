@@ -6,7 +6,7 @@ A collection of **n8n automation workflow examples** ready to import and use. Th
 > [n8n](https://n8n.io/) is a powerful workflow automation tool that allows you to connect different services and automate tasks without writing code. This repository contains exportable workflows that you can import directly into your n8n instance.
 
 ![n8n](https://img.shields.io/badge/n8n-workflow-FF6D5A?style=for-the-badge&logo=n8n&logoColor=white)
-![Examples](https://img.shields.io/badge/Examples-6-blue?style=for-the-badge)
+![Examples](https://img.shields.io/badge/Examples-8-blue?style=for-the-badge)
 ![Google Sheets](https://img.shields.io/badge/Google%20Sheets-34A853?style=for-the-badge&logo=google-sheets&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)
@@ -23,7 +23,9 @@ A collection of **n8n automation workflow examples** ready to import and use. Th
 | 3 | [T-Shirts - PostgreSQL](#-t-shirts---postgresql) | `T-Shirts - PostgreSQL.json` | Manages t-shirt orders with PostgreSQL database for inventory |
 | 4 | [Time Off](#-time-off) | `Time Off.json` | Employee vacation request system with HR approval via Discord (Form Trigger) |
 | 5 | [Time Off Webhook](#-time-off-webhook) | `Time Off Webhook.json` | Employee vacation request system with HTTP Webhook API trigger |
-| 6 | [Scraping - Curso](#-scraping---curso) | `Scraping - Curso.json` | Web scraping with AI extraction for course data from websites |
+| 6 | [Scraping - Course](#-scraping---curso) | `Scraping - Course.json` | Web scraping with AI extraction for course data from websites |
+| 7 | [Google Maps - Scraping](#-google-maps---scraping) | `Google Maps - Scraping.json` | Business lead generation from Google Maps using Apify |
+| 8 | [Wikipedia - Agent](#-wikipedia---agent) | `Wikipedia - Agent.json` + `n8n - chatbot/` | AI chatbot with Wikipedia search using LangChain agents |
 
 ---
 
@@ -666,7 +668,7 @@ CREATE TABLE days_off (
 
 ---
 
-# 🕷️ Scraping - Curso
+# 🕷️ Scraping - Course
 
 An **n8n automation workflow** that performs **web scraping with AI-powered data extraction** for online courses. It scrapes course websites, uses **OpenAI** to extract structured information, fetches additional data from Udemy using **Firecrawl**, and stores everything in **Google Sheets** and **Google Docs**.
 
@@ -811,6 +813,290 @@ The workflow creates Google Docs for each course syllabus. Configure:
 
 ---
 
+# 🗺️ Google Maps - Scraping
+
+An **n8n automation workflow** that scrapes **Google Maps** for business leads using **Apify**, extracts contact information from business websites using **Firecrawl**, and stores all data in **Google Sheets**. Perfect for lead generation and market research.
+
+![Apify](https://img.shields.io/badge/Apify-00C7B7?style=for-the-badge)
+![Firecrawl](https://img.shields.io/badge/Firecrawl-FF6B35?style=for-the-badge)
+![Google Sheets](https://img.shields.io/badge/Google%20Sheets-34A853?style=for-the-badge&logo=google-sheets&logoColor=white)
+![Google Maps](https://img.shields.io/badge/Google%20Maps-4285F4?style=for-the-badge&logo=google-maps&logoColor=white)
+
+## 📋 Description
+
+This n8n workflow automates business lead generation from Google Maps:
+
+1. **Read search queries** from Google Sheets (Query + Location)
+2. **Start Apify scraping job** using the Google Places Crawler
+3. **Wait for job completion** with polling loop
+4. **Check scraping status** until SUCCEEDED
+5. **Fetch scraped results** from Apify dataset
+6. **Save business data** to Google Sheets (title, category, address, phone, website)
+7. **Filter businesses** that have websites
+8. **Scrape websites** using Firecrawl for contact information
+9. **Extract contact details** (emails, social media, etc.)
+10. **Save contact information** to Google Sheets
+
+## 🔄 Workflow Flow
+
+```
+┌──────────────────┐    ┌──────────────────┐    ┌────────────────────┐
+│ Schedule/Manual  │───▶│ Read Pending     │───▶│ Start Apify        │
+│ Trigger          │    │ Queries          │    │ Scraping Job       │
+└──────────────────┘    └──────────────────┘    └────────────────────┘
+                                                         │
+                                                         ▼
+┌──────────────────┐    ┌──────────────────┐    ┌────────────────────┐
+│ Check Scraping   │◀───│ Wait for Job     │◀───│                    │
+│ Status           │    │ to Succeed       │    │                    │
+└──────────────────┘    └──────────────────┘    └────────────────────┘
+        │
+        ▼
+┌──────────────────┐         NO
+│ Loop Until       │─────────────────┐
+│ Complete?        │                 │
+└──────────────────┘                 │
+        │ YES                        │
+        ▼                            │
+┌──────────────────┐                 │
+│ Fetch Scraped    │◀────────────────┘
+│ Results          │
+└──────────────────┘
+        │
+        ▼
+┌──────────────────┐    ┌──────────────────┐    ┌────────────────────┐
+│ Save Business    │───▶│ Filter Businesses│───▶│ Batch Processing   │
+│ Data             │    │ with Websites    │    │ Logic              │
+└──────────────────┘    └──────────────────┘    └────────────────────┘
+                                                         │
+                                                         ▼
+┌──────────────────┐    ┌──────────────────┐    ┌────────────────────┐
+│ Save Contact     │◀───│ Extract Contact  │◀───│ Firecrawl Scrape   │
+│ Details          │    │ Information      │    │ Website            │
+└──────────────────┘    └──────────────────┘    └────────────────────┘
+```
+
+## 📊 Data Structures
+
+### Google Sheets - Query Sheet
+
+| Column | Description |
+|--------|-------------|
+| `Query` | Search term (e.g., "restaurants", "dentists") |
+| `Location` | Geographic location (e.g., "New York, NY") |
+
+### Google Sheets - Data Sheet (Results)
+
+| Column | Description |
+|--------|-------------|
+| `searchString` | Original search query + location |
+| `title` | Business name |
+| `categoryName` | Business category |
+| `address` | Full address |
+| `phone` | Phone number |
+| `website` | Business website URL |
+| `status` | Scraping job status |
+
+### Google Sheets - Contacts Sheet
+
+| Column | Description |
+|--------|-------------|
+| `business_name` | Business name |
+| `email` | Extracted email address |
+| `social_media` | Social media links |
+| `additional_contacts` | Other contact information |
+
+## ⚙️ Credential Configuration
+
+### 🔐 Required Credentials
+
+| Parameter | Placeholder | Description |
+|-----------|-------------|-------------|
+| **Google Sheet ID** | `YOUR_GOOGLE_SHEET_ID` | Google Sheets document ID* |
+| **Google Sheets Credential ID** | `YOUR_GOOGLE_SHEETS_CREDENTIAL_ID` | Google Sheets OAuth2 credential ID |
+| **Apify Credential ID** | `YOUR_APIFY_CREDENTIAL_ID` | Apify Bearer Auth credential ID |
+| **Firecrawl Credential ID** | `YOUR_FIRECRAWL_CREDENTIAL_ID` | Firecrawl Bearer Auth credential ID |
+| **Webhook ID** | `YOUR_WEBHOOK_ID` | Wait node webhook ID |
+| **Instance ID** | `YOUR_INSTANCE_ID` | Your n8n instance ID |
+
+> **\*** The Google Sheet ID can be found in the document URL:  
+> `https://docs.google.com/spreadsheets/d/`**`THIS_IS_THE_ID`**`/edit`
+
+### Apify Configuration
+
+[Apify](https://apify.com/) is used to scrape Google Maps:
+
+1. Sign up at [apify.com](https://apify.com/)
+2. Get your API token from Settings → Integrations
+3. Create a Bearer Auth credential in n8n with your token
+4. The workflow uses the `compass~crawler-google-places` actor
+
+### Firecrawl Configuration
+
+[Firecrawl](https://firecrawl.dev/) is used to scrape business websites:
+
+1. Sign up at [firecrawl.dev](https://firecrawl.dev/)
+2. Get your API key
+3. Create a Bearer Auth credential in n8n
+
+### Apify Actor Settings
+
+The workflow uses these Apify settings:
+- **Actor**: `compass~crawler-google-places`
+- **Max places per search**: 15
+- **Language**: English
+- **Max images**: 0 (disabled for speed)
+
+### Features
+
+- 🕒 **Scheduled execution** - Runs every 30 minutes by default
+- 🔄 **Polling mechanism** - Waits for Apify job to complete
+- 📍 **Location-based search** - Search businesses by query and location
+- 🌐 **Website scraping** - Extracts contact info from business websites
+- 📊 **Multi-sheet storage** - Organizes data across multiple sheets
+
+---
+
+# 🤖 Wikipedia - Agent
+
+An **n8n AI Agent workflow** that creates an intelligent chatbot assistant named **Miranda** that can search and retrieve information from **Wikipedia**. The workflow includes a standalone HTML chat interface for easy deployment.
+
+![LangChain](https://img.shields.io/badge/LangChain-Agent-00A67E?style=for-the-badge)
+![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white)
+![Gemini](https://img.shields.io/badge/Google%20Gemini-8E75B2?style=for-the-badge&logo=google&logoColor=white)
+![Ollama](https://img.shields.io/badge/Ollama-Local%20LLM-000000?style=for-the-badge)
+![Wikipedia](https://img.shields.io/badge/Wikipedia-000000?style=for-the-badge&logo=wikipedia&logoColor=white)
+
+## 📋 Description
+
+This n8n workflow creates an AI-powered chatbot with:
+
+1. **Chat Trigger** - Receives messages via webhook (public endpoint)
+2. **AI Agent** - LangChain-based agent that processes queries
+3. **Language Model** - Supports multiple LLM providers:
+   - OpenAI (o3-mini)
+   - Google Gemini
+   - Ollama (local LLM)
+4. **Simple Memory** - Buffer window memory (10 messages context)
+5. **Wikipedia Tool** - Searches and retrieves Wikipedia articles
+
+The assistant "Miranda" responds with concise information (2 paragraphs max) and includes article references as links.
+
+## 🔄 Workflow Flow
+
+```
+┌────────────────────┐    ┌────────────────────┐
+│ Chat Trigger       │───▶│ AI Agent           │
+│ (Webhook)          │    │ (LangChain)        │
+└────────────────────┘    └────────────────────┘
+                                   │
+                    ┌──────────────┼──────────────┐
+                    ▼              ▼              ▼
+            ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
+            │ OpenAI      │ │ Gemini      │ │ Ollama      │
+            │ o3-mini     │ │             │ │ gpt-oss     │
+            └─────────────┘ └─────────────┘ └─────────────┘
+                    │              │              │
+                    └──────────────┼──────────────┘
+                                   ▼
+                    ┌────────────────────────────┐
+                    │      Simple Memory         │
+                    │   (10 message context)     │
+                    └────────────────────────────┘
+                                   │
+                                   ▼
+                    ┌────────────────────────────┐
+                    │     Wikipedia Tool         │
+                    │  (Search & Retrieve)       │
+                    └────────────────────────────┘
+```
+
+## 📁 Project Structure
+
+```
+n8n_processes/
+├── Wikipedia - Agent.json      # n8n workflow definition
+└── n8n - chatbot/
+    └── index.html              # Standalone chat UI
+```
+
+## 🎨 Chat Interface (`n8n - chatbot/index.html`)
+
+A beautiful, pastel-themed chat interface built with the official n8n Chat widget:
+
+- **Color Scheme**: Soft blue pastel theme
+- **Responsive**: Adjustable chat window (400x600px default)
+- **Initial Messages**: Greeting from Miranda
+- **Custom CSS Variables**: Fully customizable styling
+
+### Running the Chat Interface
+
+1. Open the `index.html` file in a browser
+2. Ensure the n8n workflow is active and running
+3. Update the `webhookUrl` if your n8n instance is not on `localhost:5678`
+
+## ⚙️ Credential Configuration
+
+### 🔐 Required Credentials
+
+| Parameter | Placeholder | Description |
+|-----------|-------------|-------------|
+| **Chat Webhook ID** | `YOUR_CHAT_WEBHOOK_ID` | Chat trigger webhook ID |
+| **OpenAI Credential ID** | `YOUR_OPENAI_CREDENTIAL_ID` | OpenAI API credential |
+| **Google Gemini Credential ID** | `YOUR_GOOGLE_GEMINI_CREDENTIAL_ID` | Google AI API credential |
+| **Ollama Credential ID** | `YOUR_OLLAMA_CREDENTIAL_ID` | Ollama local API credential |
+| **Instance ID** | `YOUR_INSTANCE_ID` | Your n8n instance ID |
+
+### LLM Provider Options
+
+The workflow supports three LLM providers (choose one):
+
+| Provider | Model | Credential Type | Notes |
+|----------|-------|-----------------|-------|
+| **OpenAI** | o3-mini | OpenAI API | Cloud-based, requires API key |
+| **Google Gemini** | Default | Google PaLM API | Cloud-based, requires API key |
+| **Ollama** | gpt-oss:latest | Ollama API | Local, requires Ollama server |
+
+### Chat Interface Configuration
+
+Update the webhook URL in `index.html`:
+
+```javascript
+createChat({
+    webhookUrl: 'http://localhost:5678/webhook/YOUR_CHAT_WEBHOOK_ID/chat',
+    // ...
+});
+```
+
+### Agent System Prompt
+
+The AI agent (Miranda) uses this system prompt:
+
+```
+## Objective
+You are a kind assistant, your name is Miranda, you help to look up 
+for information in Wikipedia.
+
+## Rules
+- Always return responses in two paragraphs or less.
+- Always specify the references of the articles that you search as a link.
+
+## Tools
+- You have a tool to connect to wikipedia and get information, 
+  you can use to confirm information.
+```
+
+### Features
+
+- 🧠 **Multi-LLM support** - Switch between OpenAI, Gemini, or local Ollama
+- 💬 **Conversational memory** - Remembers last 10 messages
+- 📚 **Wikipedia integration** - Real-time article search
+- 🔗 **Reference links** - Provides source links for information
+- 🎨 **Custom chat UI** - Beautiful standalone HTML interface
+- 🌐 **Public endpoint** - Accessible webhook for integrations
+
+---
+
 # 🛠️ General Requirements
 
 - [n8n](https://n8n.io/) (self-hosted or cloud)
@@ -823,8 +1109,11 @@ The workflow creates Google Docs for each course syllabus. Configure:
 - OAuth2 credentials configured in n8n
 - PostgreSQL database (for T-Shirts - PostgreSQL and Time Off workflows)
 - Discord webhook (for Time Off workflows)
-- OpenAI API key (for Scraping - Curso workflow)
-- Firecrawl API key (for Scraping - Curso workflow)
+- OpenAI API key (for Scraping - Course workflow)
+- Firecrawl API key (for Scraping - Course and Google Maps - Scraping workflows)
+- Apify API token (for Google Maps - Scraping workflow)
+- Google Gemini API key (for Wikipedia - Agent workflow, optional)
+- Ollama local server (for Wikipedia - Agent workflow, optional)
 
 ---
 
@@ -837,7 +1126,7 @@ The workflow creates Google Docs for each course syllabus. Configure:
 - 📊 Build complex workflows visually
 - 💻 Self-host for complete data control
 
-These workflows demonstrate n8n's capability to integrate multiple services (Google Sheets, external APIs, Gmail, PostgreSQL, Discord, Google Calendar, OpenAI, Firecrawl, Google Docs) into seamless automation pipelines.
+These workflows demonstrate n8n's capability to integrate multiple services (Google Sheets, external APIs, Gmail, PostgreSQL, Discord, Google Calendar, OpenAI, Firecrawl, Google Docs, Apify, Google Maps, LangChain Agents, Wikipedia, Google Gemini, Ollama) into seamless automation pipelines.
 
 ---
 
