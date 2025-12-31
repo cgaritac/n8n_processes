@@ -1,0 +1,138 @@
+{
+  "name": "Pokemon finder tool",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "jsonExample",
+        "jsonExample": "{\n  \"name\": \"Pikachu\"\n}"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "4b75a76d-a98f-45db-bd4d-fca05b6edef0",
+      "name": "Start - Entry data"
+    },
+    {
+      "parameters": {
+        "url": "=https://pokeapi.co/api/v2/pokemon/{{ $json.name.trim().toLowerCase() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "9a47f709-d1a7-41c3-b58e-9f9488c8bdbe",
+      "name": "HTTP Request",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "16051ef5-c195-44a6-9db1-cfee70c71fc5",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "number"
+            },
+            {
+              "id": "dd82468e-b7d8-45a6-b9fc-c7d0a248ca4c",
+              "name": "name",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "2dc27743-dc78-487e-a8c8-d89ad0dcf656",
+              "name": "sprites.back_default",
+              "value": "={{ $json.sprites.back_default }}",
+              "type": "string"
+            },
+            {
+              "id": "c9d13bb2-7295-42b6-b435-ceaa1a2c04ee",
+              "name": "sprites.front_default",
+              "value": "={{ $json.sprites.front_default }}",
+              "type": "string"
+            },
+            {
+              "id": "69364d82-d3b7-4a65-bdc4-7960cb3993c2",
+              "name": "weight",
+              "value": "={{ $json.weight }}",
+              "type": "number"
+            },
+            {
+              "id": "1c014e0d-ea53-4f13-a673-582b74367c85",
+              "name": "types",
+              "value": "={{ $json.types.map(item => item.type).map(item => item.name) }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "dfabd32e-65f7-4ad1-9ee1-a449988f3afa",
+      "name": "Edit Fields"
+    }
+  ],
+  "pinData": {
+    "Start - Entry data": [
+      {
+        "json": {
+          "name": "Pikachu"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Start - Entry data": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "61411090-52c5-499d-9f23-fcc038d8d16a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d5ecb254afa9957f3ea6da4ead5d184c4fcc9d77f256f641607ea10b713cc486"
+  },
+  "id": "un4hsj5vO764BCKb",
+  "tags": [
+    {
+      "updatedAt": "2025-12-31T20:06:03.215Z",
+      "createdAt": "2025-12-31T20:06:03.215Z",
+      "id": "cccO0sb0G8c0H0VS",
+      "name": "Pokemon finder tool"
+    }
+  ]
+}

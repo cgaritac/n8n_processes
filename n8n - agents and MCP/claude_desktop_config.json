@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "n8n-google-calendar": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "http://localhost:5678/mcp/YOUR_MCP_CALENDAR_WEBHOOK_ID"
+      ]
+    },
+    "n8n-google-gmail": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "http://localhost:5678/mcp/YOUR_MCP_GMAIL_WEBHOOK_ID"
+      ]
+    }
+  }
+}

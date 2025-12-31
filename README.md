@@ -16,16 +16,18 @@ A collection of **n8n automation workflow examples** ready to import and use. Th
 
 ## 📚 Available Workflows
 
-| # | Workflow | File | Description |
-|---|----------|------|-------------|
-| 1 | [Pokemon Scraper](#-pokemon-scraper) | `Pokemon Scraper.json` | Fetches Pokémon data from PokéAPI and stores it in Google Sheets |
-| 2 | [Forms - T-Shirt](#-forms---t-shirt) | `Forms - T-Shirt.json` | Manages t-shirt orders from Google Forms with inventory control (Google Sheets) |
-| 3 | [T-Shirts - PostgreSQL](#-t-shirts---postgresql) | `T-Shirts - PostgreSQL.json` | Manages t-shirt orders with PostgreSQL database for inventory |
-| 4 | [Time Off](#-time-off) | `Time Off.json` | Employee vacation request system with HR approval via Discord (Form Trigger) |
-| 5 | [Time Off Webhook](#-time-off-webhook) | `Time Off Webhook.json` | Employee vacation request system with HTTP Webhook API trigger |
-| 6 | [Scraping - Course](#-scraping---curso) | `Scraping - Course.json` | Web scraping with AI extraction for course data from websites |
-| 7 | [Google Maps - Scraping](#-google-maps---scraping) | `Google Maps - Scraping.json` | Business lead generation from Google Maps using Apify |
-| 8 | [Wikipedia - Agent](#-wikipedia---agent) | `Wikipedia - Agent.json` + `n8n - chatbot/` | AI chatbot with Wikipedia search using LangChain agents |
+| #   | Workflow                                           | File                                           | Description                                                                     |
+| --- | -------------------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------- |
+| 1   | [Pokemon Scraper](#-pokemon-scraper)               | `Pokemon Scraper.json`                         | Fetches Pokémon data from PokéAPI and stores it in Google Sheets                |
+| 2   | [Forms - T-Shirt](#-forms---t-shirt)               | `Forms - T-Shirt.json`                         | Manages t-shirt orders from Google Forms with inventory control (Google Sheets) |
+| 3   | [T-Shirts - PostgreSQL](#-t-shirts---postgresql)   | `T-Shirts - PostgreSQL.json`                   | Manages t-shirt orders with PostgreSQL database for inventory                   |
+| 4   | [Time Off](#-time-off)                             | `Time Off.json`                                | Employee vacation request system with HR approval via Discord (Form Trigger)    |
+| 5   | [Time Off Webhook](#-time-off-webhook)             | `Time Off Webhook.json`                        | Employee vacation request system with HTTP Webhook API trigger                  |
+| 6   | [Scraping - Course](#-scraping---course)           | `Scraping - Course.json`                       | Web scraping with AI extraction for course data from websites                   |
+| 7   | [Google Maps - Scraping](#-google-maps---scraping) | `Google Maps - Scraping.json`                  | Business lead generation from Google Maps using Apify                           |
+| 8   | [Wikipedia - Agent](#-wikipedia---agent)           | `Wikipedia - Agent.json` + `n8n - chatbot/`    | AI chatbot with Wikipedia search using LangChain agents                         |
+| 9   | [Personal Assistant](#-personal-assistant)         | `n8n - agents and MCP/Personal Assistant.json` | AI Assistant for Email and Calendar using MCP tools                             |
+| 10  | [MCP Servers](#-mcp-servers)                       | `n8n - agents and MCP/`                        | Model Context Protocol servers for Gmail and Calendar                           |
 
 ---
 
@@ -75,28 +77,28 @@ This n8n workflow automates the following process:
 
 Your spreadsheet must have the following columns:
 
-| Column | Description |
-|--------|-------------|
-| `ID` | Numeric Pokémon ID (1, 2, 3, etc.) |
-| `Name` | Pokémon name (will be auto-filled) |
-| `Type` | Primary Pokémon type (will be auto-filled) |
-| `Sprite Front` | Front image URL (will be auto-filled) |
-| `Sprite Back` | Back image URL (will be auto-filled) |
+| Column         | Description                                |
+| -------------- | ------------------------------------------ |
+| `ID`           | Numeric Pokémon ID (1, 2, 3, etc.)         |
+| `Name`         | Pokémon name (will be auto-filled)         |
+| `Type`         | Primary Pokémon type (will be auto-filled) |
+| `Sprite Front` | Front image URL (will be auto-filled)      |
+| `Sprite Back`  | Back image URL (will be auto-filled)       |
 
 ## ⚙️ Credential Configuration
 
 ### 🔐 Required Credentials
 
-| Parameter | Placeholder | Description |
-|-----------|-------------|-------------|
-| **Google Sheet ID** | `YOUR_GOOGLE_SHEET_ID` | Your Google Sheets document ID* |
-| **Google Sheets Credential ID** | `YOUR_CREDENTIAL_ID` | Your Google Sheets OAuth2 credential ID |
-| **Google Sheets Email** | `your-email@example.com` | Email associated with the credential |
-| **Gmail Credential ID** | `YOUR_GMAIL_CREDENTIAL_ID` | Your Gmail OAuth2 credential ID |
-| **Gmail Email** | `your-email@example.com` | Email associated with Gmail credential |
-| **Recipient Email** | `your-email@example.com` | Email where you'll receive the summary |
-| **Webhook ID** | `YOUR_WEBHOOK_ID` | Webhook ID (generated by n8n) |
-| **Instance ID** | `YOUR_INSTANCE_ID` | Your n8n instance ID |
+| Parameter                       | Placeholder                | Description                             |
+| ------------------------------- | -------------------------- | --------------------------------------- |
+| **Google Sheet ID**             | `YOUR_GOOGLE_SHEET_ID`     | Your Google Sheets document ID\*        |
+| **Google Sheets Credential ID** | `YOUR_CREDENTIAL_ID`       | Your Google Sheets OAuth2 credential ID |
+| **Google Sheets Email**         | `your-email@example.com`   | Email associated with the credential    |
+| **Gmail Credential ID**         | `YOUR_GMAIL_CREDENTIAL_ID` | Your Gmail OAuth2 credential ID         |
+| **Gmail Email**                 | `your-email@example.com`   | Email associated with Gmail credential  |
+| **Recipient Email**             | `your-email@example.com`   | Email where you'll receive the summary  |
+| **Webhook ID**                  | `YOUR_WEBHOOK_ID`          | Webhook ID (generated by n8n)           |
+| **Instance ID**                 | `YOUR_INSTANCE_ID`         | Your n8n instance ID                    |
 
 > **\*** The Google Sheet ID can be found in the document URL:  
 > `https://docs.google.com/spreadsheets/d/`**`THIS_IS_THE_ID`**`/edit`
@@ -167,38 +169,38 @@ This n8n workflow automates the following process:
 
 ### Responses Sheet (T-Shirt - Responses)
 
-| Column | Description |
-|--------|-------------|
-| `Marca temporal` | Form submission timestamp |
-| `Dirección de correo electrónico` | Requester's email |
-| `Name` | Requester's name |
-| `Shirt size` | Requested size (S, M, L, XL, etc.) |
-| `Aditional comments` | Additional comments |
-| `Verified` | Verification status (TRUE/FALSE) |
-| `Verification date` | Verification date |
+| Column               | Description                        |
+| -------------------- | ---------------------------------- |
+| `Timestamp`          | Form submission timestamp          |
+| `Email Address`      | Requester's email                  |
+| `Name`               | Requester's name                   |
+| `Shirt size`         | Requested size (S, M, L, XL, etc.) |
+| `Aditional comments` | Additional comments                |
+| `Verified`           | Verification status (TRUE/FALSE)   |
+| `Verification date`  | Verification date                  |
 
 ### Inventory Sheet (T-Shirt Stock)
 
-| Column | Description |
-|--------|-------------|
-| `Product` | Product name |
-| `Size` | Size (S, M, L, XL, etc.) |
-| `Stock` | Available quantity |
+| Column    | Description              |
+| --------- | ------------------------ |
+| `Product` | Product name             |
+| `Size`    | Size (S, M, L, XL, etc.) |
+| `Stock`   | Available quantity       |
 
 ## ⚙️ Credential Configuration
 
 ### 🔐 Required Credentials
 
-| Parameter | Placeholder | Description |
-|-----------|-------------|-------------|
-| **Google Sheet Responses ID** | `YOUR_GOOGLE_SHEET_RESPONSES_ID` | Form responses document ID* |
-| **Google Sheet Stock ID** | `YOUR_GOOGLE_SHEET_STOCK_ID` | Inventory document ID* |
-| **Google Sheets Credential ID** | `YOUR_GOOGLE_SHEETS_CREDENTIAL_ID` | Google Sheets OAuth2 credential ID |
-| **Google Sheets Trigger Credential ID** | `YOUR_GOOGLE_SHEETS_TRIGGER_CREDENTIAL_ID` | Trigger OAuth2 credential ID |
-| **Gmail Credential ID** | `YOUR_GMAIL_CREDENTIAL_ID` | Gmail OAuth2 credential ID |
-| **Email** | `your-email@example.com` | Email for credentials and recipient |
-| **Webhook ID** | `YOUR_WEBHOOK_ID` | Webhook ID (generated by n8n) |
-| **Instance ID** | `YOUR_INSTANCE_ID` | Your n8n instance ID |
+| Parameter                               | Placeholder                                | Description                         |
+| --------------------------------------- | ------------------------------------------ | ----------------------------------- |
+| **Google Sheet Responses ID**           | `YOUR_GOOGLE_SHEET_RESPONSES_ID`           | Form responses document ID\*        |
+| **Google Sheet Stock ID**               | `YOUR_GOOGLE_SHEET_STOCK_ID`               | Inventory document ID\*             |
+| **Google Sheets Credential ID**         | `YOUR_GOOGLE_SHEETS_CREDENTIAL_ID`         | Google Sheets OAuth2 credential ID  |
+| **Google Sheets Trigger Credential ID** | `YOUR_GOOGLE_SHEETS_TRIGGER_CREDENTIAL_ID` | Trigger OAuth2 credential ID        |
+| **Gmail Credential ID**                 | `YOUR_GMAIL_CREDENTIAL_ID`                 | Gmail OAuth2 credential ID          |
+| **Email**                               | `your-email@example.com`                   | Email for credentials and recipient |
+| **Webhook ID**                          | `YOUR_WEBHOOK_ID`                          | Webhook ID (generated by n8n)       |
+| **Instance ID**                         | `YOUR_INSTANCE_ID`                         | Your n8n instance ID                |
 
 > **\*** The Google Sheet ID can be found in the document URL:  
 > `https://docs.google.com/spreadsheets/d/`**`THIS_IS_THE_ID`**`/edit`
@@ -275,15 +277,15 @@ This n8n workflow automates the following process:
 
 ### Google Sheets - Responses (T-Shirt - Responses)
 
-| Column | Description |
-|--------|-------------|
-| `Marca temporal` | Form submission timestamp |
-| `Dirección de correo electrónico` | Requester's email |
-| `Name` | Requester's name |
-| `Shirt size` | Requested size (S, M, L, XL, etc.) |
-| `Aditional comments` | Additional comments |
-| `Verified` | Verification status (TRUE/FALSE) |
-| `Verification date` | Verification date |
+| Column               | Description                        |
+| -------------------- | ---------------------------------- |
+| `Timestamp`          | Form submission timestamp          |
+| `Email Address`      | Requester's email                  |
+| `Name`               | Requester's name                   |
+| `Shirt size`         | Requested size (S, M, L, XL, etc.) |
+| `Aditional comments` | Additional comments                |
+| `Verified`           | Verification status (TRUE/FALSE)   |
+| `Verification date`  | Verification date                  |
 
 ### PostgreSQL - Inventory Table
 
@@ -296,28 +298,28 @@ CREATE TABLE inventory (
 );
 ```
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | SERIAL | Primary key |
-| `product_name` | VARCHAR | Product name |
-| `size` | VARCHAR | Size (S, M, L, XL, etc.) |
-| `in_stock` | INTEGER | Available quantity |
+| Column         | Type    | Description              |
+| -------------- | ------- | ------------------------ |
+| `id`           | SERIAL  | Primary key              |
+| `product_name` | VARCHAR | Product name             |
+| `size`         | VARCHAR | Size (S, M, L, XL, etc.) |
+| `in_stock`     | INTEGER | Available quantity       |
 
 ## ⚙️ Credential Configuration
 
 ### 🔐 Required Credentials
 
-| Parameter | Placeholder | Description |
-|-----------|-------------|-------------|
-| **Google Sheet Responses ID** | `YOUR_GOOGLE_SHEET_RESPONSES_ID` | Form responses document ID* |
-| **Google Sheets Credential ID** | `YOUR_GOOGLE_SHEETS_CREDENTIAL_ID` | Google Sheets OAuth2 credential ID |
-| **Google Sheets Trigger Credential ID** | `YOUR_GOOGLE_SHEETS_TRIGGER_CREDENTIAL_ID` | Trigger OAuth2 credential ID |
-| **PostgreSQL Credential ID** | `YOUR_POSTGRES_CREDENTIAL_ID` | PostgreSQL credential ID |
-| **PostgreSQL Database Name** | `your-database-name` | Name for your PostgreSQL connection |
-| **Gmail Credential ID** | `YOUR_GMAIL_CREDENTIAL_ID` | Gmail OAuth2 credential ID |
-| **Email** | `your-email@example.com` | Email for credentials and recipient |
-| **Webhook ID** | `YOUR_WEBHOOK_ID` | Webhook ID (generated by n8n) |
-| **Instance ID** | `YOUR_INSTANCE_ID` | Your n8n instance ID |
+| Parameter                               | Placeholder                                | Description                         |
+| --------------------------------------- | ------------------------------------------ | ----------------------------------- |
+| **Google Sheet Responses ID**           | `YOUR_GOOGLE_SHEET_RESPONSES_ID`           | Form responses document ID\*        |
+| **Google Sheets Credential ID**         | `YOUR_GOOGLE_SHEETS_CREDENTIAL_ID`         | Google Sheets OAuth2 credential ID  |
+| **Google Sheets Trigger Credential ID** | `YOUR_GOOGLE_SHEETS_TRIGGER_CREDENTIAL_ID` | Trigger OAuth2 credential ID        |
+| **PostgreSQL Credential ID**            | `YOUR_POSTGRES_CREDENTIAL_ID`              | PostgreSQL credential ID            |
+| **PostgreSQL Database Name**            | `your-database-name`                       | Name for your PostgreSQL connection |
+| **Gmail Credential ID**                 | `YOUR_GMAIL_CREDENTIAL_ID`                 | Gmail OAuth2 credential ID          |
+| **Email**                               | `your-email@example.com`                   | Email for credentials and recipient |
+| **Webhook ID**                          | `YOUR_WEBHOOK_ID`                          | Webhook ID (generated by n8n)       |
+| **Instance ID**                         | `YOUR_INSTANCE_ID`                         | Your n8n instance ID                |
 
 > **\*** The Google Sheet ID can be found in the document URL:  
 > `https://docs.google.com/spreadsheets/d/`**`THIS_IS_THE_ID`**`/edit`
@@ -325,6 +327,7 @@ CREATE TABLE inventory (
 ### PostgreSQL Connection
 
 To configure PostgreSQL in n8n, you'll need:
+
 - **Host**: Your database host (e.g., `db.neon.tech`)
 - **Database**: Database name
 - **User**: Database username
@@ -433,13 +436,13 @@ This n8n workflow automates the complete vacation request process:
 
 ### n8n Form Fields (Request Form)
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `Full Name` | Text | Yes | Employee's full name |
-| `Email` | Email | Yes | Employee's email address |
-| `Start date` | Date | Yes | First day of time off |
-| `End date` | Date | Yes | Last day of time off |
-| `Comments` | Textarea | No | Additional request comments |
+| Field        | Type     | Required | Description                 |
+| ------------ | -------- | -------- | --------------------------- |
+| `Full Name`  | Text     | Yes      | Employee's full name        |
+| `Email`      | Email    | Yes      | Employee's email address    |
+| `Start date` | Date     | Yes      | First day of time off       |
+| `End date`   | Date     | Yes      | Last day of time off        |
+| `Comments`   | Textarea | No       | Additional request comments |
 
 ### PostgreSQL - Days Off Table
 
@@ -452,33 +455,34 @@ CREATE TABLE days_off (
 );
 ```
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | SERIAL | Primary key |
-| `email` | VARCHAR | Employee's email (unique) |
-| `vacation_days` | INTEGER | Available vacation days |
-| `sick_days` | INTEGER | Available sick days |
+| Column          | Type    | Description               |
+| --------------- | ------- | ------------------------- |
+| `id`            | SERIAL  | Primary key               |
+| `email`         | VARCHAR | Employee's email (unique) |
+| `vacation_days` | INTEGER | Available vacation days   |
+| `sick_days`     | INTEGER | Available sick days       |
 
 ## ⚙️ Credential Configuration
 
 ### 🔐 Required Credentials
 
-| Parameter | Placeholder | Description |
-|-----------|-------------|-------------|
-| **PostgreSQL Credential ID** | `YOUR_POSTGRES_CREDENTIAL_ID` | PostgreSQL credential ID |
-| **PostgreSQL Database Name** | `your-database-name` | Name for your PostgreSQL connection |
-| **Gmail Credential ID** | `YOUR_GMAIL_CREDENTIAL_ID` | Gmail OAuth2 credential ID |
+| Parameter                         | Placeholder                          | Description                          |
+| --------------------------------- | ------------------------------------ | ------------------------------------ |
+| **PostgreSQL Credential ID**      | `YOUR_POSTGRES_CREDENTIAL_ID`        | PostgreSQL credential ID             |
+| **PostgreSQL Database Name**      | `your-database-name`                 | Name for your PostgreSQL connection  |
+| **Gmail Credential ID**           | `YOUR_GMAIL_CREDENTIAL_ID`           | Gmail OAuth2 credential ID           |
 | **Google Calendar Credential ID** | `YOUR_GOOGLE_CALENDAR_CREDENTIAL_ID` | Google Calendar OAuth2 credential ID |
-| **Calendar Email** | `your-email@example.com` | Calendar to create events in |
-| **Form Webhook ID** | `YOUR_FORM_WEBHOOK_ID` | Form Trigger webhook ID |
-| **Discord Webhook ID** | `YOUR_DISCORD_WEBHOOK_ID` | Discord notification webhook ID |
-| **Wait Webhook ID** | `YOUR_WAIT_WEBHOOK_ID` | Wait node webhook ID |
-| **Gmail Webhook ID** | `YOUR_GMAIL_WEBHOOK_ID` | Gmail webhook ID |
-| **Instance ID** | `YOUR_INSTANCE_ID` | Your n8n instance ID |
+| **Calendar Email**                | `your-email@example.com`             | Calendar to create events in         |
+| **Form Webhook ID**               | `YOUR_FORM_WEBHOOK_ID`               | Form Trigger webhook ID              |
+| **Discord Webhook ID**            | `YOUR_DISCORD_WEBHOOK_ID`            | Discord notification webhook ID      |
+| **Wait Webhook ID**               | `YOUR_WAIT_WEBHOOK_ID`               | Wait node webhook ID                 |
+| **Gmail Webhook ID**              | `YOUR_GMAIL_WEBHOOK_ID`              | Gmail webhook ID                     |
+| **Instance ID**                   | `YOUR_INSTANCE_ID`                   | Your n8n instance ID                 |
 
 ### Discord Configuration
 
 This workflow uses Discord webhook authentication. To set it up:
+
 1. Go to your Discord server settings
 2. Navigate to **Integrations** → **Webhooks**
 3. Create a new webhook for your HR channel
@@ -487,6 +491,7 @@ This workflow uses Discord webhook authentication. To set it up:
 ### Validation Rules
 
 The workflow includes these built-in validations:
+
 - ⏰ Request must be submitted at least **7 days** before start date
 - 📅 End date must be **after** start date
 - 🏖️ Employee must have **enough vacation days** available
@@ -561,9 +566,9 @@ POST /webhook/vacation/ask/form/001
 
 ### Headers
 
-| Header | Required | Description |
-|--------|----------|-------------|
-| `Authorization` | Yes | Header authentication token |
+| Header          | Required | Description                 |
+| --------------- | -------- | --------------------------- |
+| `Authorization` | Yes      | Header authentication token |
 
 ### Request Body
 
@@ -631,20 +636,20 @@ CREATE TABLE days_off (
 
 ### 🔐 Required Credentials
 
-| Parameter | Placeholder | Description |
-|-----------|-------------|-------------|
-| **Header Auth Credential ID** | `YOUR_HEADER_AUTH_CREDENTIAL_ID` | HTTP Header authentication credential |
-| **PostgreSQL Credential ID** | `YOUR_POSTGRES_CREDENTIAL_ID` | PostgreSQL credential ID |
-| **PostgreSQL Database Name** | `your-database-name` | Name for your PostgreSQL connection |
-| **Gmail Credential ID** | `YOUR_GMAIL_CREDENTIAL_ID` | Gmail OAuth2 credential ID |
-| **Google Calendar Credential ID** | `YOUR_GOOGLE_CALENDAR_CREDENTIAL_ID` | Google Calendar OAuth2 credential ID |
-| **Calendar Email** | `your-email@example.com` | Calendar to create events in |
-| **HTTP Webhook ID** | `YOUR_HTTP_WEBHOOK_ID` | Main webhook endpoint ID |
-| **Form Webhook ID** | `YOUR_FORM_WEBHOOK_ID` | Form Trigger webhook ID (disabled) |
-| **Discord Webhook ID** | `YOUR_DISCORD_WEBHOOK_ID` | Discord notification webhook ID |
-| **Wait Webhook ID** | `YOUR_WAIT_WEBHOOK_ID` | Wait node webhook ID |
-| **Gmail Webhook ID** | `YOUR_GMAIL_WEBHOOK_ID` | Gmail webhook ID |
-| **Instance ID** | `YOUR_INSTANCE_ID` | Your n8n instance ID |
+| Parameter                         | Placeholder                          | Description                           |
+| --------------------------------- | ------------------------------------ | ------------------------------------- |
+| **Header Auth Credential ID**     | `YOUR_HEADER_AUTH_CREDENTIAL_ID`     | HTTP Header authentication credential |
+| **PostgreSQL Credential ID**      | `YOUR_POSTGRES_CREDENTIAL_ID`        | PostgreSQL credential ID              |
+| **PostgreSQL Database Name**      | `your-database-name`                 | Name for your PostgreSQL connection   |
+| **Gmail Credential ID**           | `YOUR_GMAIL_CREDENTIAL_ID`           | Gmail OAuth2 credential ID            |
+| **Google Calendar Credential ID** | `YOUR_GOOGLE_CALENDAR_CREDENTIAL_ID` | Google Calendar OAuth2 credential ID  |
+| **Calendar Email**                | `your-email@example.com`             | Calendar to create events in          |
+| **HTTP Webhook ID**               | `YOUR_HTTP_WEBHOOK_ID`               | Main webhook endpoint ID              |
+| **Form Webhook ID**               | `YOUR_FORM_WEBHOOK_ID`               | Form Trigger webhook ID (disabled)    |
+| **Discord Webhook ID**            | `YOUR_DISCORD_WEBHOOK_ID`            | Discord notification webhook ID       |
+| **Wait Webhook ID**               | `YOUR_WAIT_WEBHOOK_ID`               | Wait node webhook ID                  |
+| **Gmail Webhook ID**              | `YOUR_GMAIL_WEBHOOK_ID`              | Gmail webhook ID                      |
+| **Instance ID**                   | `YOUR_INSTANCE_ID`                   | Your n8n instance ID                  |
 
 ### Header Authentication Setup
 
@@ -657,14 +662,14 @@ CREATE TABLE days_off (
 
 ### Differences from Time Off (Form Version)
 
-| Feature | Time Off | Time Off Webhook |
-|---------|----------|------------------|
-| **Trigger** | n8n Form | HTTP POST Webhook |
-| **Input Validation** | n8n Form validation | JavaScript validation |
-| **Response** | Form submission page | JSON response |
-| **Authentication** | None (public form) | Header authentication |
-| **HR Approval Wait** | Form-based | Webhook callback |
-| **Use Case** | Employee self-service | System integration |
+| Feature              | Time Off              | Time Off Webhook      |
+| -------------------- | --------------------- | --------------------- |
+| **Trigger**          | n8n Form              | HTTP POST Webhook     |
+| **Input Validation** | n8n Form validation   | JavaScript validation |
+| **Response**         | Form submission page  | JSON response         |
+| **Authentication**   | None (public form)    | Header authentication |
+| **HR Approval Wait** | Form-based            | Webhook callback      |
+| **Use Case**         | Employee self-service | System integration    |
 
 ---
 
@@ -730,19 +735,19 @@ This n8n workflow automates the process of extracting course information from we
 
 ### Google Sheets - Websites to Search
 
-| Column | Description |
-|--------|-------------|
+| Column    | Description                  |
+| --------- | ---------------------------- |
 | `Website` | URL of the website to scrape |
 
 ### Google Sheets - Results
 
-| Column | Description |
-|--------|-------------|
-| `Course name` | Name of the course |
-| `Teacher` | Instructor's name |
-| `DevTalles` | DevTalles course URL |
-| `Udemy` | Udemy course URL |
-| `Description` | Course description |
+| Column                  | Description                         |
+| ----------------------- | ----------------------------------- |
+| `Course name`           | Name of the course                  |
+| `Teacher`               | Instructor's name                   |
+| `DevTalles`             | DevTalles course URL                |
+| `Udemy`                 | Udemy course URL                    |
+| `Description`           | Course description                  |
 | `GoogleDocs - Syllabus` | Link to generated syllabus document |
 
 ### AI-Extracted Data Structure
@@ -763,16 +768,16 @@ This n8n workflow automates the process of extracting course information from we
 
 ### 🔐 Required Credentials
 
-| Parameter | Placeholder | Description |
-|-----------|-------------|-------------|
-| **Google Sheet ID** | `YOUR_GOOGLE_SHEET_ID` | Google Sheets document ID* |
-| **Google Sheets Credential ID** | `YOUR_GOOGLE_SHEETS_CREDENTIAL_ID` | Google Sheets OAuth2 credential ID |
-| **OpenAI Credential ID** | `YOUR_OPENAI_CREDENTIAL_ID` | OpenAI API credential ID |
-| **Firecrawl Credential ID** | `YOUR_FIRECRAWL_CREDENTIAL_ID` | Firecrawl API credential ID |
-| **Firecrawl API Key** | `YOUR_FIRECRAWL_API_KEY` | Firecrawl API key (for HTTP requests) |
-| **Google Docs Credential ID** | `YOUR_GOOGLE_DOCS_CREDENTIAL_ID` | Google Docs OAuth2 credential ID |
-| **Google Drive Folder ID** | `YOUR_GOOGLE_DRIVE_FOLDER_ID` | Folder ID for created documents |
-| **Instance ID** | `YOUR_INSTANCE_ID` | Your n8n instance ID |
+| Parameter                       | Placeholder                        | Description                           |
+| ------------------------------- | ---------------------------------- | ------------------------------------- |
+| **Google Sheet ID**             | `YOUR_GOOGLE_SHEET_ID`             | Google Sheets document ID\*           |
+| **Google Sheets Credential ID** | `YOUR_GOOGLE_SHEETS_CREDENTIAL_ID` | Google Sheets OAuth2 credential ID    |
+| **OpenAI Credential ID**        | `YOUR_OPENAI_CREDENTIAL_ID`        | OpenAI API credential ID              |
+| **Firecrawl Credential ID**     | `YOUR_FIRECRAWL_CREDENTIAL_ID`     | Firecrawl API credential ID           |
+| **Firecrawl API Key**           | `YOUR_FIRECRAWL_API_KEY`           | Firecrawl API key (for HTTP requests) |
+| **Google Docs Credential ID**   | `YOUR_GOOGLE_DOCS_CREDENTIAL_ID`   | Google Docs OAuth2 credential ID      |
+| **Google Drive Folder ID**      | `YOUR_GOOGLE_DRIVE_FOLDER_ID`      | Folder ID for created documents       |
+| **Instance ID**                 | `YOUR_INSTANCE_ID`                 | Your n8n instance ID                  |
 
 > **\*** The Google Sheet ID can be found in the document URL:  
 > `https://docs.google.com/spreadsheets/d/`**`THIS_IS_THE_ID`**`/edit`
@@ -780,10 +785,12 @@ This n8n workflow automates the process of extracting course information from we
 ### OpenAI Configuration
 
 This workflow uses the **o3-mini** model for:
+
 1. Extracting structured course data from scraped content
 2. Formatting syllabus content for Google Docs
 
 Configure in n8n:
+
 1. Go to **Credentials** → **New**
 2. Select **OpenAI**
 3. Add your OpenAI API key
@@ -799,6 +806,7 @@ Configure in n8n:
 ### Google Drive Folder
 
 The workflow creates Google Docs for each course syllabus. Configure:
+
 - Create a folder in Google Drive
 - Get the folder ID from the URL: `https://drive.google.com/drive/folders/`**`FOLDER_ID`**
 - Update the `folderId` parameter
@@ -880,44 +888,44 @@ This n8n workflow automates business lead generation from Google Maps:
 
 ### Google Sheets - Query Sheet
 
-| Column | Description |
-|--------|-------------|
-| `Query` | Search term (e.g., "restaurants", "dentists") |
-| `Location` | Geographic location (e.g., "New York, NY") |
+| Column     | Description                                   |
+| ---------- | --------------------------------------------- |
+| `Query`    | Search term (e.g., "restaurants", "dentists") |
+| `Location` | Geographic location (e.g., "New York, NY")    |
 
 ### Google Sheets - Data Sheet (Results)
 
-| Column | Description |
-|--------|-------------|
+| Column         | Description                      |
+| -------------- | -------------------------------- |
 | `searchString` | Original search query + location |
-| `title` | Business name |
-| `categoryName` | Business category |
-| `address` | Full address |
-| `phone` | Phone number |
-| `website` | Business website URL |
-| `status` | Scraping job status |
+| `title`        | Business name                    |
+| `categoryName` | Business category                |
+| `address`      | Full address                     |
+| `phone`        | Phone number                     |
+| `website`      | Business website URL             |
+| `status`       | Scraping job status              |
 
 ### Google Sheets - Contacts Sheet
 
-| Column | Description |
-|--------|-------------|
-| `business_name` | Business name |
-| `email` | Extracted email address |
-| `social_media` | Social media links |
+| Column                | Description               |
+| --------------------- | ------------------------- |
+| `business_name`       | Business name             |
+| `email`               | Extracted email address   |
+| `social_media`        | Social media links        |
 | `additional_contacts` | Other contact information |
 
 ## ⚙️ Credential Configuration
 
 ### 🔐 Required Credentials
 
-| Parameter | Placeholder | Description |
-|-----------|-------------|-------------|
-| **Google Sheet ID** | `YOUR_GOOGLE_SHEET_ID` | Google Sheets document ID* |
-| **Google Sheets Credential ID** | `YOUR_GOOGLE_SHEETS_CREDENTIAL_ID` | Google Sheets OAuth2 credential ID |
-| **Apify Credential ID** | `YOUR_APIFY_CREDENTIAL_ID` | Apify Bearer Auth credential ID |
-| **Firecrawl Credential ID** | `YOUR_FIRECRAWL_CREDENTIAL_ID` | Firecrawl Bearer Auth credential ID |
-| **Webhook ID** | `YOUR_WEBHOOK_ID` | Wait node webhook ID |
-| **Instance ID** | `YOUR_INSTANCE_ID` | Your n8n instance ID |
+| Parameter                       | Placeholder                        | Description                         |
+| ------------------------------- | ---------------------------------- | ----------------------------------- |
+| **Google Sheet ID**             | `YOUR_GOOGLE_SHEET_ID`             | Google Sheets document ID\*         |
+| **Google Sheets Credential ID** | `YOUR_GOOGLE_SHEETS_CREDENTIAL_ID` | Google Sheets OAuth2 credential ID  |
+| **Apify Credential ID**         | `YOUR_APIFY_CREDENTIAL_ID`         | Apify Bearer Auth credential ID     |
+| **Firecrawl Credential ID**     | `YOUR_FIRECRAWL_CREDENTIAL_ID`     | Firecrawl Bearer Auth credential ID |
+| **Webhook ID**                  | `YOUR_WEBHOOK_ID`                  | Wait node webhook ID                |
+| **Instance ID**                 | `YOUR_INSTANCE_ID`                 | Your n8n instance ID                |
 
 > **\*** The Google Sheet ID can be found in the document URL:  
 > `https://docs.google.com/spreadsheets/d/`**`THIS_IS_THE_ID`**`/edit`
@@ -942,6 +950,7 @@ This n8n workflow automates business lead generation from Google Maps:
 ### Apify Actor Settings
 
 The workflow uses these Apify settings:
+
 - **Actor**: `compass~crawler-google-places`
 - **Max places per search**: 15
 - **Language**: English
@@ -1039,23 +1048,23 @@ A beautiful, pastel-themed chat interface built with the official n8n Chat widge
 
 ### 🔐 Required Credentials
 
-| Parameter | Placeholder | Description |
-|-----------|-------------|-------------|
-| **Chat Webhook ID** | `YOUR_CHAT_WEBHOOK_ID` | Chat trigger webhook ID |
-| **OpenAI Credential ID** | `YOUR_OPENAI_CREDENTIAL_ID` | OpenAI API credential |
-| **Google Gemini Credential ID** | `YOUR_GOOGLE_GEMINI_CREDENTIAL_ID` | Google AI API credential |
-| **Ollama Credential ID** | `YOUR_OLLAMA_CREDENTIAL_ID` | Ollama local API credential |
-| **Instance ID** | `YOUR_INSTANCE_ID` | Your n8n instance ID |
+| Parameter                       | Placeholder                        | Description                 |
+| ------------------------------- | ---------------------------------- | --------------------------- |
+| **Chat Webhook ID**             | `YOUR_CHAT_WEBHOOK_ID`             | Chat trigger webhook ID     |
+| **OpenAI Credential ID**        | `YOUR_OPENAI_CREDENTIAL_ID`        | OpenAI API credential       |
+| **Google Gemini Credential ID** | `YOUR_GOOGLE_GEMINI_CREDENTIAL_ID` | Google AI API credential    |
+| **Ollama Credential ID**        | `YOUR_OLLAMA_CREDENTIAL_ID`        | Ollama local API credential |
+| **Instance ID**                 | `YOUR_INSTANCE_ID`                 | Your n8n instance ID        |
 
 ### LLM Provider Options
 
 The workflow supports three LLM providers (choose one):
 
-| Provider | Model | Credential Type | Notes |
-|----------|-------|-----------------|-------|
-| **OpenAI** | o3-mini | OpenAI API | Cloud-based, requires API key |
-| **Google Gemini** | Default | Google PaLM API | Cloud-based, requires API key |
-| **Ollama** | gpt-oss:latest | Ollama API | Local, requires Ollama server |
+| Provider          | Model          | Credential Type | Notes                         |
+| ----------------- | -------------- | --------------- | ----------------------------- |
+| **OpenAI**        | o3-mini        | OpenAI API      | Cloud-based, requires API key |
+| **Google Gemini** | Default        | Google PaLM API | Cloud-based, requires API key |
+| **Ollama**        | gpt-oss:latest | Ollama API      | Local, requires Ollama server |
 
 ### Chat Interface Configuration
 
@@ -1063,8 +1072,8 @@ Update the webhook URL in `index.html`:
 
 ```javascript
 createChat({
-    webhookUrl: 'http://localhost:5678/webhook/YOUR_CHAT_WEBHOOK_ID/chat',
-    // ...
+  webhookUrl: "http://localhost:5678/webhook/YOUR_CHAT_WEBHOOK_ID/chat",
+  // ...
 });
 ```
 
@@ -1074,7 +1083,7 @@ The AI agent (Miranda) uses this system prompt:
 
 ```
 ## Objective
-You are a kind assistant, your name is Miranda, you help to look up 
+You are a kind assistant, your name is Miranda, you help to look up
 for information in Wikipedia.
 
 ## Rules
@@ -1082,7 +1091,7 @@ for information in Wikipedia.
 - Always specify the references of the articles that you search as a link.
 
 ## Tools
-- You have a tool to connect to wikipedia and get information, 
+- You have a tool to connect to wikipedia and get information,
   you can use to confirm information.
 ```
 
@@ -1097,6 +1106,173 @@ for information in Wikipedia.
 
 ---
 
+# 🤵 Personal Assistant
+
+An **n8n AI Agent workflow** that acts as a personal assistant to manage your **Gmail** and **Google Calendar**. It supports multiple LLMs and uses **MCP (Model Context Protocol)** to access external tools, keeping the agent logic clean and modular.
+
+![LangChain](https://img.shields.io/badge/LangChain-Agent-00A67E?style=for-the-badge)
+![Gmail](https://img.shields.io/badge/Gmail-EA4335?style=for-the-badge&logo=gmail&logoColor=white)
+![Google Calendar](https://img.shields.io/badge/Google%20Calendar-4285F4?style=for-the-badge&logo=google-calendar&logoColor=white)
+![MCP](https://img.shields.io/badge/MCP-Protocol-blue?style=for-the-badge)
+
+## 📋 Description
+
+The Personal Assistant "Miranda" is designed to be a helpful productivity partner. Instead of having all tools hardcoded, it connects to **MCP Servers** to perform actions.
+
+### Capabilities:
+
+1.  **📧 Email Management**:
+    - Read recent emails
+    - Draft new emails (HTML format)
+    - Send emails (after confirmation)
+2.  **📅 Calendar Management**:
+    - List upcoming events
+    - Check for conflicts
+    - Schedule new meetings
+3.  **🔍 Information Retrieval**:
+    - **Pokemon Finder**: A dedicated sub-workflow tool to retrieve Pokemon data (demonstrating tool modularity).
+4.  **🧠 Intelligent Context**:
+    - Maintains a short-term memory of the conversation.
+    - Knows the current date and time to schedule events accurately.
+
+## 🔄 Workflow Flow
+
+```
+┌────────────────────┐    ┌────────────────────┐
+│ Chat Trigger       │───▶│ AI Agent           │
+│ (Webhook)          │    │ (LangChain)        │
+└────────────────────┘    └────────────────────┘
+                                   │
+                    ┌──────────────┼──────────────┐
+                    ▼              ▼              ▼
+            ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
+            │ OpenAI      │ │ Gemini      │ │ Ollama      │
+            │ o3-mini     │ │             │ │ gpt-oss     │
+            └─────────────┘ └─────────────┘ └─────────────┘
+                                   │
+         ┌─────────────────────────┼─────────────────────────┐
+         ▼                         ▼                         ▼
+┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
+│ MCP Client      │       │ MCP Client      │       │ Tool Workflow   │
+│ (Gmail)         │       │ (Calendar)      │       │ (Pokemon)       │
+└─────────────────┘       └─────────────────┘       └─────────────────┘
+         │                         │
+         ▼                         ▼
+  (Connects to)             (Connects to)
+  Gmail MCP Server          Calendar MCP Server
+```
+
+## ⚙️ Credential Configuration
+
+### 🔐 Required Credentials
+
+| Parameter                    | Placeholder                     | Description                            |
+| ---------------------------- | ------------------------------- | -------------------------------------- |
+| **Chat Webhook ID**          | `YOUR_CHAT_WEBHOOK_ID`          | Chat trigger webhook ID                |
+| **Pokemon Tool Workflow ID** | `YOUR_POKEMON_TOOL_WORKFLOW_ID` | ID of the Pokemon finder tool workflow |
+| **MCP Gmail Webhook**        | `YOUR_MCP_GMAIL_WEBHOOK_ID`     | URL part for MCP Gmail Server          |
+| **MCP Calendar Webhook**     | `YOUR_MCP_CALENDAR_WEBHOOK_ID`  | URL part for MCP Calendar Server       |
+| **OpenAI / Gemini / Ollama** | -                               | Your preferred LLM credential          |
+
+> **Note**: This workflow acts as the **Client**. It does not need direct Google credentials because it asks the MCP Servers to handle the authentication and execution.
+
+---
+
+# 🔌 MCP Servers
+
+Workflows that act as **Model Context Protocol (MCP)** servers. These are "headless" workflows that expose tools to other agents (like the Personal Assistant or Claude Desktop).
+
+## 1. Gmail MCP Server (`Gmail MCP.json`)
+
+Exposes Gmail capabilities over MCP.
+
+### 📋 Tools Provided
+
+- `send_email`: Sends an email.
+- `create_draft`: Creates a draft email.
+- `get_emails`: Retrieves recent emails.
+
+### 🔄 Flow
+
+```
+┌────────────────────┐      ┌────────────────────┐
+│ MCP Trigger        │───┬─▶│ Gmail Tool         │
+│ (Webhook)          │   │  │ (Send Email)       │
+└────────────────────┘   │  └────────────────────┘
+                         │
+                         ├─▶┌────────────────────┐
+                         │  │ Gmail Tool         │
+                         │  │ (Create Draft)     │
+                         │  └────────────────────┘
+                         │
+                         └─▶┌────────────────────┐
+                            │ Gmail Tool         │
+                            │ (Get Emails)       │
+                            └────────────────────┘
+```
+
+## 2. Calendar MCP Server (`MCP Calendar.json`)
+
+Exposes Google Calendar capabilities over MCP.
+
+### 📋 Tools Provided
+
+- `get_calendar_events`: Lists events within a time range.
+- `create_calendar_event`: Creates a new event.
+
+### 🔄 Flow
+
+```
+┌────────────────────┐      ┌────────────────────┐
+│ MCP Trigger        │───┬─▶│ Google Calendar    │
+│ (Webhook)          │   │  │ (Get Events)       │
+└────────────────────┘   │  └────────────────────┘
+                         │
+                         └─▶┌────────────────────┐
+                            │ Google Calendar    │
+                            │ (Create Event)     │
+                            └────────────────────┘
+```
+
+## ⚙️ Credential Configuration (Servers)
+
+These workflows **DO** require direct access to Google APIs.
+
+| Parameter                   | Placeholder                          | Description                 |
+| --------------------------- | ------------------------------------ | --------------------------- |
+| **MCP Gmail Webhook ID**    | `YOUR_MCP_GMAIL_WEBHOOK_ID`          | Trigger ID for Gmail MCP    |
+| **MCP Calendar Webhook ID** | `YOUR_MCP_CALENDAR_WEBHOOK_ID`       | Trigger ID for Calendar MCP |
+| **Gmail Credential**        | `YOUR_GMAIL_CREDENTIAL_ID`           | Gmail OAuth2                |
+| **Calendar Credential**     | `YOUR_GOOGLE_CALENDAR_CREDENTIAL_ID` | Google Calendar OAuth2      |
+| **Calendar ID**             | `YOUR_CALENDAR_ID`                   | Calendar email address      |
+
+## 🔧 Client Configuration (Claude Desktop)
+
+You can also use these MCP servers with Claude Desktop! Use the provided `claude_desktop_config.json` file found in the `n8n - agents and MCP/` directory.
+
+```json
+{
+  "mcpServers": {
+    "n8n-google-calendar": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "http://localhost:5678/mcp/YOUR_MCP_CALENDAR_WEBHOOK_ID"
+      ]
+    },
+    "n8n-google-gmail": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "http://localhost:5678/mcp/YOUR_MCP_GMAIL_WEBHOOK_ID"
+      ]
+    }
+  }
+}
+```
+
+---
+
 # 🛠️ General Requirements
 
 - [n8n](https://n8n.io/) (self-hosted or cloud)
@@ -1104,7 +1280,7 @@ for information in Wikipedia.
   - Google Sheets API
   - Gmail API
   - Google Calendar API (for Time Off workflows)
-  - Google Docs API (for Scraping - Curso workflow)
+  - Google Docs API (for Scraping - Course workflow)
   - Google Drive API (for Scraping - Curso workflow)
 - OAuth2 credentials configured in n8n
 - PostgreSQL database (for T-Shirts - PostgreSQL and Time Off workflows)

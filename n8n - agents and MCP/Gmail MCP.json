@@ -1,0 +1,138 @@
+{
+  "name": "Gmail MCP",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "6aef5171-25bf-4398-a2af-9d68bc65e914"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        -16
+      ],
+      "id": "46a08b4e-0b02-405f-8fef-3817b2194ddf",
+      "name": "MCP Server Trigger",
+      "webhookId": "YOUR_MCP_GMAIL_WEBHOOK_ID"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {
+          "appendAttribution": false,
+          "ccList": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('CC', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        -448,
+        240
+      ],
+      "id": "1110f426-5fd0-4bb3-99db-5d39a35f243e",
+      "name": "Send email message",
+      "webhookId": "YOUR_GMAIL_TOOL_WEBHOOK_ID",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail - cgaritac@gmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "emailType": "html",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        -640,
+        240
+      ],
+      "id": "07ff0f00-63ae-4ca5-ba1b-a2a1d09e8202",
+      "name": "Create draft",
+      "webhookId": "9906a470-e1a6-4f99-abde-0b08012cbb74",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Z92XD8YvFErIesR4",
+          "name": "Gmail - cgaritac@gmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "messageId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message_ID', ``, 'string') }}",
+        "simple": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Simplify', ``, 'boolean') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        -240,
+        240
+      ],
+      "id": "d6eb8954-8bad-44c0-9f6a-58e1e9a40887",
+      "name": "get_emails",
+      "webhookId": "9906a470-e1a6-4f99-abde-0b08012cbb74",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Z92XD8YvFErIesR4",
+          "name": "Gmail - cgaritac@gmail.com"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Create draft": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send email message": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_emails": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "8790c620-f5a5-4112-a2aa-1fa50fa75a5f",
+  "meta": {
+    "instanceId": "d5ecb254afa9957f3ea6da4ead5d184c4fcc9d77f256f641607ea10b713cc486"
+  },
+  "id": "Ddx9ppvPADKeRZku",
+  "tags": []
+}
