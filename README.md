@@ -28,6 +28,7 @@ A collection of **n8n automation workflow examples** ready to import and use. Th
 | 8   | [Wikipedia - Agent](#-wikipedia---agent)           | `Wikipedia - Agent.json` + `n8n - chatbot/`    | AI chatbot with Wikipedia search using LangChain agents                         |
 | 9   | [Personal Assistant](#-personal-assistant)         | `n8n - agents and MCP/Personal Assistant.json` | AI Assistant for Email and Calendar using MCP tools                             |
 | 10  | [MCP Servers](#-mcp-servers)                       | `n8n - agents and MCP/`                        | Model Context Protocol servers for Gmail and Calendar                           |
+| 11  | [Online Store Agent](#-online-store-agent)         | `n8n agents with BE/Online store agent.json`   | Customer service agent connected to local backend (mi-tienda)                   |
 
 ---
 
@@ -1270,6 +1271,69 @@ You can also use these MCP servers with Claude Desktop! Use the provided `claude
   }
 }
 ```
+
+---
+
+# 🛒 Online Store Agent
+
+An **n8n AI Agent workflow** that acts as a customer service representative for an online store. It connects to a **local backend API** (`mi-tienda`) to query order status and update delivery addresses.
+
+![LangChain](https://img.shields.io/badge/LangChain-Agent-00A67E?style=for-the-badge)
+![Gmail](https://img.shields.io/badge/Gmail-EA4335?style=for-the-badge&logo=gmail&logoColor=white)
+![Google Gemini](https://img.shields.io/badge/Google%20Gemini-8E75B2?style=for-the-badge&logo=google-gemini&logoColor=white)
+![NodeJS](https://img.shields.io/badge/Node.js-Backend-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
+
+## 📋 Description
+
+This agent helps customers with their orders using a conversational interface.
+
+### Capabilities:
+
+1.  **📦 Order Status**: Look up order details using Name and Order ID.
+2.  **🚚 Update Address**: Change the delivery address for an order (requires validation).
+3.  **📧 Escalate to Support**: Send email summaries to support if the issue cannot be resolved.
+
+### Backend (`mi-tienda`)
+
+This workflow requires the local backend to be running.
+
+- Located in `n8n agents with BE/mi-tienda`
+- Run with: `npm install && npm start`
+- It uses `json-server` to mock a REST API on port 3000, using the provided `db.json` file as the database.
+
+## 🔄 Workflow Flow
+
+```
+┌────────────────────┐    ┌────────────────────┐
+│ Chat Trigger       │───▶│ AI Agent           │
+│ (Webhook)          │    │ (LangChain)        │
+└────────────────────┘    └────────────────────┘
+                                   │
+                    ┌──────────────┼──────────────┐
+                    ▼              ▼              ▼
+            ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
+            │ Google      │ │ Memory      │ │ Tools       │
+            │ Gemini      │ │             │ │             │
+            └─────────────┘ └─────────────┘ └─────────────┘
+                                                   │
+                                     ┌─────────────┴─────────────┐
+                                     ▼                           ▼
+                           ┌──────────────────┐        ┌──────────────────┐
+                           │ HTTP Requests    │        │ Gmail Tool       │
+                           │ (Local Backend)  │        │ (Send Email)     │
+                           └──────────────────┘        └──────────────────┘
+```
+
+## ⚙️ Credential Configuration
+
+### 🔐 Required Credentials
+
+| Parameter                    | Placeholder                        | Description                               |
+| ---------------------------- | ---------------------------------- | ----------------------------------------- |
+| **Chat Webhook ID**          | `YOUR_CHAT_WEBHOOK_ID`             | Chat trigger webhook ID                   |
+| **Google Gemini Credential** | `YOUR_GOOGLE_GEMINI_CREDENTIAL_ID` | Google Gemini API Key                     |
+| **Gmail Credential**         | `YOUR_GMAIL_CREDENTIAL_ID`         | Gmail OAuth2                              |
+| **Gmail Webhook ID**         | `YOUR_GMAIL_WEBHOOK_ID`            | Webhook ID for Gmail tool (if applicable) |
 
 ---
 
