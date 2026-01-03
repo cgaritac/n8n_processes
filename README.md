@@ -6,7 +6,7 @@ A collection of **n8n automation workflow examples** ready to import and use. Th
 > [n8n](https://n8n.io/) is a powerful workflow automation tool that allows you to connect different services and automate tasks without writing code. This repository contains exportable workflows that you can import directly into your n8n instance.
 
 ![n8n](https://img.shields.io/badge/n8n-workflow-FF6D5A?style=for-the-badge&logo=n8n&logoColor=white)
-![Examples](https://img.shields.io/badge/Examples-8-blue?style=for-the-badge)
+![Examples](https://img.shields.io/badge/Examples-10-blue?style=for-the-badge)
 ![Google Sheets](https://img.shields.io/badge/Google%20Sheets-34A853?style=for-the-badge&logo=google-sheets&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)
@@ -29,6 +29,8 @@ A collection of **n8n automation workflow examples** ready to import and use. Th
 | 9   | [Personal Assistant](#-personal-assistant)         | `n8n - agents and MCP/Personal Assistant.json` | AI Assistant for Email and Calendar using MCP tools                             |
 | 10  | [MCP Servers](#-mcp-servers)                       | `n8n - agents and MCP/`                        | Model Context Protocol servers for Gmail and Calendar                           |
 | 11  | [Online Store Agent](#-online-store-agent)         | `n8n agents with BE/Online store agent.json`   | Customer service agent connected to local backend (mi-tienda)                   |
+| 12  | [RAG Standard System](#-rag-standard-system)      | `RAG standard system.json`                      | RAG system with in-memory vector store for document Q&A                          |
+| 13  | [RAG Standard System PostgreSQL](#-rag-standard-system-postgresql) | `RAG standard system PostgreSQL.json` | RAG system with PostgreSQL PGVector for scalable document Q&A                  |
 
 ---
 
@@ -1337,6 +1339,321 @@ This workflow requires the local backend to be running.
 
 ---
 
+# 📚 RAG Standard System
+
+An **n8n RAG (Retrieval-Augmented Generation) workflow** that enables document-based Q&A using an **in-memory vector store**. Perfect for legal document consultation, knowledge bases, or any scenario where you need to query uploaded documents.
+
+![LangChain](https://img.shields.io/badge/LangChain-Agent-00A67E?style=for-the-badge)
+![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white)
+![RAG](https://img.shields.io/badge/RAG-Vector%20Store-blue?style=for-the-badge)
+
+## 📋 Description
+
+This workflow implements a complete RAG system with two main components:
+
+1. **Document Ingestion**:
+   - Upload PDF documents via n8n Form
+   - Extract text using Default Data Loader
+   - Split text into chunks (Recursive Character Text Splitter)
+   - Generate embeddings using OpenAI (text-embedding-3-large)
+   - Store vectors in in-memory vector store
+
+2. **Document Query**:
+   - Chat interface for asking questions
+   - Semantic search in vector store
+   - AI Agent (gpt-4.1-mini) generates answers based on retrieved context
+   - Maintains conversation memory (10 messages)
+
+The system is configured as a **Legal Assistant** that helps lawyers consult internal legal documents with professional, accurate responses.
+
+## 🔄 Workflow Flow
+
+```
+┌────────────────────┐    ┌────────────────────┐    ┌────────────────────┐
+│ Form Submission    │───▶│ Default Data       │───▶│ Recursive Text     │
+│ (Upload PDF)       │    │ Loader             │    │ Splitter           │
+└────────────────────┘    └────────────────────┘    └────────────────────┘
+                                                              │
+                                                              ▼
+┌────────────────────┐    ┌────────────────────┐    ┌────────────────────┐
+│ Simple Vector      │◀───│ Embeddings         │◀───│                    │
+│ Store (Insert)     │    │ OpenAI              │    │                    │
+└────────────────────┘    └────────────────────┘    └────────────────────┘
+
+┌────────────────────┐    ┌────────────────────┐    ┌────────────────────┐
+│ Chat Trigger       │───▶│ AI Agent            │───▶│ Simple Vector      │
+│ (Query)            │    │ (LangChain)          │    │ Store (Retrieve)   │
+└────────────────────┘    └────────────────────┘    └────────────────────┘
+                                   │
+                    ┌──────────────┼──────────────┐
+                    ▼              ▼              ▼
+            ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
+            │ OpenAI      │ │ Simple      │ │ Vector      │
+            │ Chat Model  │ │ Memory      │ │ Store Tool  │
+            │ (gpt-4.1)   │ │ (10 msgs)   │ │             │
+            └─────────────┘ └─────────────┘ └─────────────┘
+```
+
+## ⚙️ Credential Configuration
+
+### 🔐 Required Credentials
+
+| Parameter                    | Placeholder                        | Description                      |
+| ---------------------------- | ---------------------------------- | -------------------------------- |
+| **Form Webhook ID**          | `YOUR_FORM_WEBHOOK_ID`             | Form trigger webhook ID          |
+| **Chat Webhook ID**          | `YOUR_CHAT_WEBHOOK_ID`             | Chat trigger webhook ID          |
+| **OpenAI Credential ID**     | `YOUR_OPENAI_CREDENTIAL_ID`        | OpenAI API credential            |
+| **Instance ID**              | `YOUR_INSTANCE_ID`                 | Your n8n instance ID             |
+
+### OpenAI Configuration
+
+The workflow uses:
+- **Embeddings Model**: `text-embedding-3-large` (for vector generation)
+- **Chat Model**: `gpt-4.1-mini` (for answer generation)
+
+### Vector Store Configuration
+
+- **Storage**: In-memory (Simple Vector Store)
+- **Memory Key**: `vector_store_key`
+- **Embedding Batch Size**: 250
+- **Chunk Overlap**: 250 characters
+
+### System Prompt
+
+The AI agent is configured as a Legal Assistant with this system prompt:
+
+```
+# Rol: Asistente Legal
+
+## Descripción
+Eres un asistente legal diseñado para ayudar a un abogado a consultar 
+información contenida en documentos legales internos. Debes recuperar, 
+analizar y entregar respuestas precisas, claras y fundamentadas basadas 
+únicamente en los documentos disponibles.
+
+## Reglas
+- Respuestas cortas y puntuales
+- Incluir referencia del documento utilizado
+- Si no conoces la respuesta, indicar que no dispones de la información
+- Mantener tono profesional y formal
+```
+
+### Features
+
+- 📄 **PDF Document Support** - Upload and process PDF files
+- 🔍 **Semantic Search** - Vector-based similarity search
+- 💬 **Conversational Interface** - Chat-based Q&A
+- 🧠 **Context Memory** - Remembers last 10 messages
+- 📚 **Document References** - Includes source document citations
+- ⚡ **In-Memory Storage** - Fast retrieval (suitable for small to medium document sets)
+
+---
+
+# 🗄️ RAG Standard System PostgreSQL
+
+An **n8n RAG workflow** that uses **PostgreSQL with PGVector extension** for scalable, persistent vector storage. Supports automatic document ingestion from Google Drive and advanced document management features.
+
+![LangChain](https://img.shields.io/badge/LangChain-Agent-00A67E?style=for-the-badge)
+![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![PGVector](https://img.shields.io/badge/PGVector-Vector%20DB-green?style=for-the-badge)
+![Google Drive](https://img.shields.io/badge/Google%20Drive-4285F4?style=for-the-badge&logo=google-drive&logoColor=white)
+
+## 📋 Description
+
+This workflow extends the basic RAG system with enterprise-grade features:
+
+1. **Document Ingestion** (Multiple Methods):
+   - **Form Upload**: Upload PDFs via n8n Form
+   - **Google Drive Integration**: Automatic ingestion from Google Drive folder
+   - **Scheduled Sync**: Periodic sync with Google Drive folder
+   - **Manual Trigger**: On-demand document processing
+
+2. **Smart Document Management**:
+   - **Duplicate Detection**: Checks MD5 checksum to avoid re-processing
+   - **Version Control**: Tracks file modifications
+   - **Incremental Updates**: Only processes new or changed files
+   - **Vector Cleanup**: Removes old vectors when files are updated
+
+3. **PostgreSQL PGVector Storage**:
+   - Persistent vector storage
+   - Scalable to large document collections
+   - Metadata tracking (file_id, name, mime_type, etc.)
+   - Ingestion history table (`ingested_files`)
+
+4. **Query Interface**:
+   - Chat-based Q&A interface
+   - Semantic search using PGVector
+   - AI Agent generates contextual answers
+   - Conversation memory
+
+## 🔄 Workflow Flow
+
+### Document Ingestion Flow
+
+```
+┌────────────────────┐    ┌────────────────────┐    ┌────────────────────┐
+│ Trigger            │───▶│ Search Files/      │───▶│ Is it a file?      │
+│ (Manual/Schedule/  │    │ Folders            │    │                    │
+│  Google Drive)     │    └────────────────────┘    └────────────────────┘
+└────────────────────┘                                      │
+                                                            ▼
+┌────────────────────┐    ┌────────────────────┐    ┌────────────────────┐
+│ Get Previous      │───▶│ Was it charged     │───▶│ Get Variables      │
+│ Upload             │    │ before?            │    │                    │
+└────────────────────┘    └────────────────────┘    └────────────────────┘
+        │                          │                          │
+        │ NO                      │ YES                      │
+        │                          │                          │
+        ▼                          ▼                          ▼
+┌────────────────────┐    ┌────────────────────┐    ┌────────────────────┐
+│ No Operation      │    │ Delete References  │───▶│ Insert Document    │
+│                    │    │ (Old Vectors)      │    │ (Metadata)         │
+└────────────────────┘    └────────────────────┘    └────────────────────┘
+                                                              │
+                                                              ▼
+┌────────────────────┐    ┌────────────────────┐    ┌────────────────────┐
+│ Download File      │───▶│ Default Data       │───▶│ Recursive Text     │
+│ (Google Drive)     │    │ Loader             │    │ Splitter           │
+└────────────────────┘    └────────────────────┘    └────────────────────┘
+                                                              │
+                                                              ▼
+┌────────────────────┐    ┌────────────────────┐    ┌────────────────────┐
+│ Postgres PGVector  │◀───│ Embeddings         │    │                    │
+│ Store (Insert)     │    │ OpenAI              │    │                    │
+└────────────────────┘    └────────────────────┘    └────────────────────┘
+        │
+        ▼
+┌────────────────────┐
+│ Update Vectors     │
+│ file_id            │
+└────────────────────┘
+```
+
+### Query Flow
+
+```
+┌────────────────────┐    ┌────────────────────┐    ┌────────────────────┐
+│ Chat Trigger       │───▶│ AI Agent           │───▶│ Answer Questions   │
+│ (Query)            │    │ (LangChain)        │    │ with Vector Store  │
+└────────────────────┘    └────────────────────┘    └────────────────────┘
+                                   │                           │
+                    ┌──────────────┼──────────────┐           │
+                    ▼              ▼              ▼           │
+            ┌─────────────┐ ┌─────────────┐ ┌─────────────┐  │
+            │ OpenAI      │ │ Simple      │ │             │  │
+            │ Chat Model  │ │ Memory      │ │             │  │
+            │ (gpt-4.1)   │ │ (10 msgs)   │ │             │  │
+            └─────────────┘ └─────────────┘ └─────────────┘  │
+                                                               │
+                                                               ▼
+                                            ┌────────────────────┐
+                                            │ Postgres PGVector  │
+                                            │ Store (Retrieve)   │
+                                            └────────────────────┘
+```
+
+## 📊 Database Schema
+
+### PostgreSQL Tables
+
+#### `n8n_vectors` (PGVector Table)
+
+Created automatically by PGVector extension. Stores document chunks as vectors.
+
+| Column      | Type         | Description                    |
+| ----------- | ------------ | ------------------------------ |
+| `id`        | UUID         | Primary key                    |
+| `content`   | TEXT         | Document chunk text             |
+| `embedding` | VECTOR(1536) | OpenAI embedding vector         |
+| `metadata`  | JSONB        | Additional metadata             |
+| `file_id`   | TEXT         | Google Drive file ID (nullable) |
+
+#### `ingested_files` (Tracking Table)
+
+Tracks which files have been processed.
+
+```sql
+CREATE TABLE ingested_files (
+  file_id VARCHAR PRIMARY KEY,
+  name VARCHAR,
+  mime_type VARCHAR,
+  md5_checksum VARCHAR,
+  modified_time TIMESTAMP,
+  last_ingested TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+## ⚙️ Credential Configuration
+
+### 🔐 Required Credentials
+
+| Parameter                        | Placeholder                          | Description                          |
+| -------------------------------- | ------------------------------------ | ------------------------------------ |
+| **Form Webhook ID**              | `YOUR_FORM_WEBHOOK_ID`               | Form trigger webhook ID             |
+| **Chat Webhook ID**              | `YOUR_CHAT_WEBHOOK_ID`               | Chat trigger webhook ID              |
+| **OpenAI Credential ID**         | `YOUR_OPENAI_CREDENTIAL_ID`         | OpenAI API credential                |
+| **PostgreSQL Credential ID**     | `YOUR_POSTGRES_CREDENTIAL_ID`       | PostgreSQL credential ID             |
+| **PostgreSQL Database Name**     | `your-database-name`                 | Name for your PostgreSQL connection  |
+| **Google Drive Credential ID**   | `YOUR_GOOGLE_DRIVE_CREDENTIAL_ID`   | Google Drive OAuth2 credential ID     |
+| **Google Drive Folder ID**       | `YOUR_GOOGLE_DRIVE_FOLDER_ID`        | Google Drive folder ID for documents |
+| **Instance ID**                  | `YOUR_INSTANCE_ID`                   | Your n8n instance ID                 |
+
+### PostgreSQL Setup
+
+1. **Install PGVector Extension**:
+   ```sql
+   CREATE EXTENSION IF NOT EXISTS vector;
+   ```
+
+2. **Create Tracking Table**:
+   ```sql
+   CREATE TABLE ingested_files (
+     file_id VARCHAR PRIMARY KEY,
+     name VARCHAR,
+     mime_type VARCHAR,
+     md5_checksum VARCHAR,
+     modified_time TIMESTAMP,
+     last_ingested TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+   );
+   ```
+
+3. **Configure Connection**:
+   - Use a PostgreSQL database with PGVector extension
+   - Recommended: Neon, Supabase, or self-hosted PostgreSQL
+
+### Google Drive Configuration
+
+1. Create a folder in Google Drive for your documents
+2. Get the folder ID from the URL: `https://drive.google.com/drive/folders/`**`FOLDER_ID`**
+3. Configure the folder ID in the workflow nodes
+
+### Features
+
+- 🗄️ **Persistent Storage** - PostgreSQL with PGVector for scalable storage
+- 🔄 **Auto-Sync** - Automatic document ingestion from Google Drive
+- 🔍 **Duplicate Detection** - MD5 checksum prevents re-processing
+- 📝 **Version Control** - Tracks file modifications
+- 🔄 **Incremental Updates** - Only processes new/changed files
+- 🧹 **Vector Cleanup** - Removes old vectors when files are updated
+- 📊 **Metadata Tracking** - Comprehensive document metadata
+- 💬 **Chat Interface** - Conversational Q&A
+- 🧠 **Memory** - Maintains conversation context
+
+### Comparison: In-Memory vs PostgreSQL
+
+| Feature                    | RAG Standard System | RAG Standard System PostgreSQL |
+| -------------------------- | ------------------- | ----------------------------- |
+| **Storage**                | In-memory           | PostgreSQL PGVector            |
+| **Scalability**            | Small to medium     | Large document collections     |
+| **Persistence**             | No (lost on restart)| Yes (persistent)              |
+| **Google Drive Integration**| No                  | Yes                           |
+| **Duplicate Detection**    | No                  | Yes (MD5 checksum)           |
+| **Version Control**        | No                  | Yes                           |
+| **Use Case**               | Quick prototypes    | Production systems            |
+
+---
+
 # 🛠️ General Requirements
 
 - [n8n](https://n8n.io/) (self-hosted or cloud)
@@ -1345,11 +1662,12 @@ This workflow requires the local backend to be running.
   - Gmail API
   - Google Calendar API (for Time Off workflows)
   - Google Docs API (for Scraping - Course workflow)
-  - Google Drive API (for Scraping - Curso workflow)
+  - Google Drive API (for Scraping - Course and RAG workflows)
 - OAuth2 credentials configured in n8n
-- PostgreSQL database (for T-Shirts - PostgreSQL and Time Off workflows)
+- PostgreSQL database (for T-Shirts - PostgreSQL, Time Off, and RAG workflows)
+- PostgreSQL with PGVector extension (for RAG Standard System PostgreSQL)
 - Discord webhook (for Time Off workflows)
-- OpenAI API key (for Scraping - Course workflow)
+- OpenAI API key (for Scraping - Course, Wikipedia - Agent, Personal Assistant, Online Store Agent, and RAG workflows)
 - Firecrawl API key (for Scraping - Course and Google Maps - Scraping workflows)
 - Apify API token (for Google Maps - Scraping workflow)
 - Google Gemini API key (for Wikipedia - Agent workflow, optional)
@@ -1366,7 +1684,7 @@ This workflow requires the local backend to be running.
 - 📊 Build complex workflows visually
 - 💻 Self-host for complete data control
 
-These workflows demonstrate n8n's capability to integrate multiple services (Google Sheets, external APIs, Gmail, PostgreSQL, Discord, Google Calendar, OpenAI, Firecrawl, Google Docs, Apify, Google Maps, LangChain Agents, Wikipedia, Google Gemini, Ollama) into seamless automation pipelines.
+These workflows demonstrate n8n's capability to integrate multiple services (Google Sheets, external APIs, Gmail, PostgreSQL, Discord, Google Calendar, OpenAI, Firecrawl, Google Docs, Apify, Google Maps, LangChain Agents, Wikipedia, Google Gemini, Ollama, PGVector, Google Drive, RAG) into seamless automation pipelines.
 
 ---
 
