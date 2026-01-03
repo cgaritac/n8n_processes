@@ -1,0 +1,337 @@
+{
+  "name": "Tool - Get products",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "http://localhost:3000/products",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "3b480f6c-37ea-4b74-94ae-0dbd93453600",
+      "name": "Get products"
+    },
+    {
+      "parameters": {
+        "path": "my-store/products",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "41ce530a-9329-4efd-ae76-ef5dd76d2798",
+      "name": "Webhook - Get products",
+      "webhookId": "YOUR_WEBHOOK_ID",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YOUR_HEADER_AUTH_CREDENTIAL_ID",
+          "name": "Header Auth - ElevenLabs"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "7af9aee0-372a-4040-81f7-6c858f31b7cf",
+      "name": "Response with products"
+    },
+    {
+      "parameters": {
+        "content": "## Get products \nGet products from my backend.",
+        "height": 304,
+        "width": 864
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -160,
+        -96
+      ],
+      "typeVersion": 1,
+      "id": "022ed6d6-7d1e-4a79-b797-e3ee0a48f369",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "my-store/orders",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -160,
+        640
+      ],
+      "id": "7a75d5d3-ea13-4a68-96a8-0a42dffb6220",
+      "name": "Webhook - Get order by id",
+      "webhookId": "YOUR_WEBHOOK_ID",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YOUR_HEADER_AUTH_CREDENTIAL_ID",
+          "name": "Header Auth - ElevenLabs"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        864,
+        448
+      ],
+      "id": "38f0a138-392a-4784-bfcd-3da73e6cfc84",
+      "name": "Response with the order"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "170e9f7d-0356-4d5c-b200-5c2e5c236af5",
+              "leftValue": "={{ $json.body.orderId }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        48,
+        640
+      ],
+      "id": "ac44ecda-c510-468f-94b2-7b39eee4de50",
+      "name": "OrderId exists in body?"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"ok\": \"false\",\n  \"errors\": \"OrderId is required\"\n}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        480,
+        736
+      ],
+      "id": "9d5129c1-6d2f-4055-9f77-5eb03a7c2d6d",
+      "name": "Response bad request"
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/orders/{{ $json.body.orderId }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        256,
+        544
+      ],
+      "id": "5504c3e4-860d-4851-92c6-65f99fec968d",
+      "name": "Get order by Id",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0cfa7e73-d777-46b0-b369-77064e792fd9",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        464,
+        544
+      ],
+      "id": "7d58f681-d9a5-400f-a59f-99e7b57b3a52",
+      "name": "The order was found?"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"ok\": \"false\",\n  \"errors\": \"Ordernot found\"\n}",
+        "options": {
+          "responseCode": 404
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        864,
+        608
+      ],
+      "id": "e9c0809c-2827-4f36-9d18-e291c95858e0",
+      "name": "Response not found"
+    },
+    {
+      "parameters": {
+        "content": "## Get order by id\nGet an order por el Id",
+        "height": 592,
+        "width": 1328,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -256,
+        336
+      ],
+      "typeVersion": 1,
+      "id": "e361a6a4-56f0-4b28-b0f6-851e3795c525",
+      "name": "Sticky Note1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook - Get products": {
+      "main": [
+        [
+          {
+            "node": "Get products",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get products": {
+      "main": [
+        [
+          {
+            "node": "Response with products",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook - Get order by id": {
+      "main": [
+        [
+          {
+            "node": "OrderId exists in body?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OrderId exists in body?": {
+      "main": [
+        [
+          {
+            "node": "Get order by Id",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Response bad request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get order by Id": {
+      "main": [
+        [
+          {
+            "node": "The order was found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "The order was found?": {
+      "main": [
+        [
+          {
+            "node": "Response with the order",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Response not found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "39d6e334-001d-4cca-83f0-0ce8bdec38b6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "YOUR_INSTANCE_ID"
+  },
+  "id": "4wue6TAFPPWdNs3c",
+  "tags": []
+}

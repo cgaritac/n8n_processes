@@ -6,7 +6,7 @@ A collection of **n8n automation workflow examples** ready to import and use. Th
 > [n8n](https://n8n.io/) is a powerful workflow automation tool that allows you to connect different services and automate tasks without writing code. This repository contains exportable workflows that you can import directly into your n8n instance.
 
 ![n8n](https://img.shields.io/badge/n8n-workflow-FF6D5A?style=for-the-badge&logo=n8n&logoColor=white)
-![Examples](https://img.shields.io/badge/Examples-10-blue?style=for-the-badge)
+![Examples](https://img.shields.io/badge/Examples-11-blue?style=for-the-badge)
 ![Google Sheets](https://img.shields.io/badge/Google%20Sheets-34A853?style=for-the-badge&logo=google-sheets&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)
@@ -31,6 +31,7 @@ A collection of **n8n automation workflow examples** ready to import and use. Th
 | 11  | [Online Store Agent](#-online-store-agent)         | `n8n agents with BE/Online store agent.json`   | Customer service agent connected to local backend (mi-tienda)                   |
 | 12  | [RAG Standard System](#-rag-standard-system)      | `RAG standard system.json`                      | RAG system with in-memory vector store for document Q&A                          |
 | 13  | [RAG Standard System PostgreSQL](#-rag-standard-system-postgresql) | `RAG standard system PostgreSQL.json` | RAG system with PostgreSQL PGVector for scalable document Q&A                  |
+| 14  | [Voice Agent](#-voice-agent)                      | `voice - agent/`                     | Voice AI agent with ElevenLabs for customer service via phone                  |
 
 ---
 
@@ -1654,6 +1655,185 @@ CREATE TABLE ingested_files (
 
 ---
 
+# 🎤 Voice Agent
+
+An **n8n voice AI agent workflow** that enables **phone-based customer service** using **ElevenLabs Conversational AI**. The agent can query product information and order details from a local backend API, providing a complete voice assistant solution for e-commerce.
+
+![ElevenLabs](https://img.shields.io/badge/ElevenLabs-Voice%20AI-00A67E?style=for-the-badge)
+![NodeJS](https://img.shields.io/badge/Node.js-Backend-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
+![Webhook](https://img.shields.io/badge/Webhook-API-FF6D5A?style=for-the-badge)
+
+## 📋 Description
+
+This workflow creates a voice-powered customer service agent that:
+
+1. **Voice Interface**: Uses ElevenLabs Conversational AI widget for phone-based interactions
+2. **Product Queries**: Retrieves product information from local backend
+3. **Order Lookup**: Fetches order details by order ID
+4. **Error Handling**: Validates requests and provides appropriate error responses
+5. **Backend Integration**: Connects to local `mi-tienda` backend API
+
+The agent is designed to handle customer inquiries via voice, making it perfect for phone support, IVR systems, or voice-enabled customer service.
+
+## 🔄 Workflow Flow
+
+```
+┌────────────────────┐    ┌────────────────────┐    ┌────────────────────┐
+│ ElevenLabs        │───▶│ Webhook - Get      │───▶│ Get products       │
+│ Voice Agent        │    │ products           │    │ (HTTP Request)     │
+│ (Phone Call)       │    │                    │    └────────────────────┘
+└────────────────────┘    └────────────────────┘              │
+                                   │                           │
+                                   │                           ▼
+                                   │                  ┌────────────────────┐
+                                   │                  │ Response with      │
+                                   │                  │ products           │
+                                   │                  └────────────────────┘
+                                   │
+                                   ▼
+┌────────────────────┐    ┌────────────────────┐    ┌────────────────────┐
+│ Webhook - Get      │───▶│ OrderId exists     │───▶│ Get order by Id    │
+│ order by id        │    │ in body?           │    │ (HTTP Request)     │
+└────────────────────┘    └────────────────────┘    └────────────────────┘
+                                   │                           │
+                    ┌──────────────┴──────────────┐          │
+                    │                              │          │
+                    ▼                              ▼          ▼
+        ┌────────────────────┐        ┌────────────────────┐
+        │ Response bad       │        │ The order was      │
+        │ request (400)      │        │ found?             │
+        └────────────────────┘        └────────────────────┘
+                                              │
+                              ┌───────────────┴───────────────┐
+                              │                               │
+                              ▼                               ▼
+                  ┌────────────────────┐        ┌────────────────────┐
+                  │ Response with      │        │ Response not       │
+                  │ the order (200)    │        │ found (404)        │
+                  └────────────────────┘        └────────────────────┘
+```
+
+## 📁 Project Structure
+
+```
+voice - agent/
+├── Tool - Get products.json    # n8n workflow with product/order endpoints
+├── index-agent.html            # ElevenLabs voice agent widget interface
+└── mi-tienda/                  # Local backend API
+    ├── db.json                 # JSON database
+    ├── package.json            # Node.js dependencies
+    └── README.md               # Backend documentation
+```
+
+## 🎯 API Endpoints
+
+The workflow exposes two webhook endpoints:
+
+### 1. Get Products
+
+- **Path**: `my-store/products`
+- **Method**: `GET`
+- **Authentication**: Header Auth (ElevenLabs API key)
+- **Response**: List of all products from backend
+
+### 2. Get Order by ID
+
+- **Path**: `my-store/orders`
+- **Method**: `POST`
+- **Authentication**: Header Auth (ElevenLabs API key)
+- **Request Body**:
+  ```json
+  {
+    "orderId": "123"
+  }
+  ```
+- **Response**: Order details or error message
+
+## ⚙️ Credential Configuration
+
+### 🔐 Required Credentials
+
+| Parameter                        | Placeholder                          | Description                          |
+| -------------------------------- | ------------------------------------ | ------------------------------------ |
+| **Webhook ID**                   | `YOUR_WEBHOOK_ID`                    | Webhook ID for both endpoints        |
+| **Header Auth Credential ID**    | `YOUR_HEADER_AUTH_CREDENTIAL_ID`     | HTTP Header Auth credential          |
+| **ElevenLabs Agent ID**          | `YOUR_ELEVENLABS_AGENT_ID`           | ElevenLabs Conversational AI agent ID |
+| **Backend URL**                  | `http://localhost:3000`              | Local backend API URL                |
+| **Instance ID**                  | `YOUR_INSTANCE_ID`                   | Your n8n instance ID                 |
+
+### ElevenLabs Configuration
+
+1. **Create an ElevenLabs Account**:
+   - Sign up at [elevenlabs.io](https://elevenlabs.io/)
+   - Navigate to Conversational AI section
+
+2. **Create a Conversational AI Agent**:
+   - Create a new agent
+   - Configure the agent to use your n8n webhook endpoints
+   - Copy the Agent ID
+
+3. **Configure Header Authentication**:
+   - In n8n, create a Header Auth credential
+   - Use your ElevenLabs API key as the header value
+   - Header name: `xi-api-key` (or as required by ElevenLabs)
+
+4. **Update HTML Interface**:
+   - Open `index-agent.html`
+   - Replace `YOUR_ELEVENLABS_AGENT_ID` with your actual agent ID
+
+### Backend Setup (`mi-tienda`)
+
+The workflow requires the local backend to be running:
+
+1. Navigate to `voice - agent/mi-tienda/`
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Start the server:
+   ```bash
+   npm start
+   ```
+4. The backend runs on `http://localhost:3000` by default
+
+The backend uses `json-server` to mock a REST API with the provided `db.json` file.
+
+### Webhook Configuration
+
+Both endpoints use the same webhook ID but different paths:
+- `my-store/products` → Get all products
+- `my-store/orders` → Get order by ID
+
+Ensure the webhook is configured with Header Authentication using your ElevenLabs API key.
+
+## 🎨 Voice Interface (`index-agent.html`)
+
+The HTML file provides a simple interface for the ElevenLabs voice agent widget:
+
+```html
+<elevenlabs-convai agent-id="YOUR_ELEVENLABS_AGENT_ID">
+</elevenlabs-convai>
+```
+
+### Features
+
+- 📞 **Phone-based interaction** - Customers can call and speak with the agent
+- 🛍️ **Product queries** - Retrieve product information via voice
+- 📦 **Order lookup** - Find order details by order ID
+- ✅ **Input validation** - Validates order ID presence
+- ❌ **Error handling** - Returns appropriate error messages (400, 404)
+- 🔐 **Secure authentication** - Header Auth for API security
+- 🌐 **Backend integration** - Connects to local Node.js backend
+
+### Use Cases
+
+- **Phone Support**: Handle customer service calls automatically
+- **IVR Systems**: Interactive Voice Response for order inquiries
+- **Voice Commerce**: Voice-enabled shopping assistance
+- **Order Tracking**: Voice-based order status queries
+
+---
+
 # 🛠️ General Requirements
 
 - [n8n](https://n8n.io/) (self-hosted or cloud)
@@ -1684,7 +1864,7 @@ CREATE TABLE ingested_files (
 - 📊 Build complex workflows visually
 - 💻 Self-host for complete data control
 
-These workflows demonstrate n8n's capability to integrate multiple services (Google Sheets, external APIs, Gmail, PostgreSQL, Discord, Google Calendar, OpenAI, Firecrawl, Google Docs, Apify, Google Maps, LangChain Agents, Wikipedia, Google Gemini, Ollama, PGVector, Google Drive, RAG) into seamless automation pipelines.
+These workflows demonstrate n8n's capability to integrate multiple services (Google Sheets, external APIs, Gmail, PostgreSQL, Discord, Google Calendar, OpenAI, Firecrawl, Google Docs, Apify, Google Maps, LangChain Agents, Wikipedia, Google Gemini, Ollama, PGVector, Google Drive, RAG, ElevenLabs Voice AI) into seamless automation pipelines.
 
 ---
 
