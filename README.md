@@ -6,7 +6,7 @@ A collection of **n8n automation workflow examples** ready to import and use. Th
 > [n8n](https://n8n.io/) is a powerful workflow automation tool that allows you to connect different services and automate tasks without writing code. This repository contains exportable workflows that you can import directly into your n8n instance.
 
 ![n8n](https://img.shields.io/badge/n8n-workflow-FF6D5A?style=for-the-badge&logo=n8n&logoColor=white)
-![Examples](https://img.shields.io/badge/Examples-12-blue?style=for-the-badge)
+![Examples](https://img.shields.io/badge/Examples-13-blue?style=for-the-badge)
 ![Google Sheets](https://img.shields.io/badge/Google%20Sheets-34A853?style=for-the-badge&logo=google-sheets&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)
@@ -33,6 +33,7 @@ A collection of **n8n automation workflow examples** ready to import and use. Th
 | 13  | [RAG Standard System PostgreSQL](#-rag-standard-system-postgresql) | `RAG standard system PostgreSQL.json` | RAG system with PostgreSQL PGVector for scalable document Q&A                  |
 | 14  | [Voice Agent](#-voice-agent)                      | `voice - agent/`                     | Voice AI agent with ElevenLabs for customer service via phone                  |
 | 15  | [Telegram Bot](#-telegram-bot)                    | `n8n-telegram-bot/`                  | AI-powered Telegram bot with text, image, and voice message support             |
+| 16  | [WhatsApp Bot](#-whatsapp-bot)                    | `n8n-whatsapp-bot/`                  | AI-powered WhatsApp bot with text, image, document, and voice message support   |
 
 ---
 
@@ -2095,6 +2096,247 @@ The bot is configured as a general knowledge assistant:
 
 ---
 
+# 📱 WhatsApp Bot
+
+An **n8n AI-powered WhatsApp bot** that provides intelligent conversational assistance with support for **text messages**, **image analysis**, **document processing**, and **voice messages**. The bot uses OpenAI for natural language understanding and can respond with text or audio.
+
+![WhatsApp](https://img.shields.io/badge/WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)
+![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white)
+![Meta](https://img.shields.io/badge/Meta-WhatsApp%20Business-0081FB?style=for-the-badge&logo=meta&logoColor=white)
+
+## 📋 Description
+
+This workflow creates a comprehensive WhatsApp bot that:
+
+1. **Text Messages**: 
+   - Processes general knowledge questions using AI Agent
+   - Maintains conversation context per user (10 messages memory)
+   - Responds with intelligent text answers
+
+2. **Image Messages**:
+   - Downloads images from WhatsApp
+   - Analyzes images using OpenAI Vision (GPT-4o)
+   - Extracts information from images
+   - Responds with AI-generated insights about the image
+
+3. **Image Documents**:
+   - Handles image files sent as documents
+   - Analyzes document images using OpenAI Vision
+   - Processes captions if provided
+
+4. **Voice Messages**:
+   - Downloads and transcribes voice messages using OpenAI Whisper
+   - Processes transcribed text with AI Agent
+   - Can respond with text or convert response to audio using OpenAI TTS
+
+The bot is designed as a **general knowledge assistant** that helps users with questions and can understand context from images, documents, and voice messages.
+
+## 🔄 Workflow Flow
+
+```
+┌────────────────────┐
+│ WhatsApp Trigger   │
+│ (Message Received) │
+└────────────────────┘
+         │
+         ▼
+┌────────────────────┐
+│ What type of       │
+│ message is it?     │
+│ (Switch)           │
+└────────────────────┘
+    │    │    │    │
+    │    │    │    └───▶ Audio Message
+    │    │    │
+    │    │    └────────▶ Image Document
+    │    │
+    │    └─────────────▶ Image Message
+    │
+    └──────────────────▶ Text Message
+
+Text Message Flow:
+┌────────────────────┐    ┌────────────────────┐    ┌────────────────────┐
+│ Get Person Info    │───▶│ Get and Unify      │───▶│ AI Agent           │
+│                    │    │ Data               │    │ (LangChain)        │
+└────────────────────┘    └────────────────────┘    └────────────────────┘
+                                   │                           │
+                    ┌──────────────┼──────────────┐           │
+                    ▼              ▼              ▼           │
+            ┌─────────────┐ ┌─────────────┐ ┌─────────────┐  │
+            │ OpenAI      │ │ Simple      │ │             │  │
+            │ Chat Model  │ │ Memory      │ │             │  │
+            │ (gpt-4.1)   │ │ (10 msgs)   │ │             │  │
+            └─────────────┘ └─────────────┘ └─────────────┘  │
+                                                               │
+                                                               ▼
+                                            ┌────────────────────┐
+                                            │ Is it an audio?    │
+                                            └────────────────────┘
+                                                    │
+                                    ┌───────────────┴───────────────┐
+                                    │                               │
+                                    ▼                               ▼
+                        ┌────────────────────┐        ┌────────────────────┐
+                        │ Generate Audio     │        │ Send Text Message   │
+                        │ (OpenAI TTS)      │        │                    │
+                        └────────────────────┘        └────────────────────┘
+                                │
+                                ▼
+                        ┌────────────────────┐
+                        │ Send Audio Message │
+                        └────────────────────┘
+
+Image Message Flow:
+┌────────────────────┐    ┌────────────────────┐    ┌────────────────────┐
+│ Download Image     │───▶│ Get File           │───▶│ Analyze Image      │
+│ (WhatsApp Media)   │    │ (HTTP Request)     │    │ (OpenAI Vision)    │
+└────────────────────┘    └────────────────────┘    └────────────────────┘
+                                                              │
+                                                              ▼
+┌────────────────────┐    ┌────────────────────┐    ┌────────────────────┐
+│ Get Person Info    │───▶│ Get and Unify     │───▶│ AI Agent           │
+│ (with AI analysis) │    │ Data              │    │                    │
+└────────────────────┘    └────────────────────┘    └────────────────────┘
+
+Voice Message Flow:
+┌────────────────────┐    ┌────────────────────┐    ┌────────────────────┐
+│ Download Audio      │───▶│ Get Audio          │───▶│ Analyze Audio      │
+│ (WhatsApp Media)    │    │ (HTTP Request)     │    │ (OpenAI Whisper)   │
+└────────────────────┘    └────────────────────┘    └────────────────────┘
+                                                              │
+                                                              ▼
+┌────────────────────┐    ┌────────────────────┐    ┌────────────────────┐
+│ Get Person Audio   │───▶│ Get and Unify      │───▶│ AI Agent           │
+│                    │    │ Data               │    │                    │
+└────────────────────┘    └────────────────────┘    └────────────────────┘
+```
+
+## 📁 Project Structure
+
+```
+n8n-whatsapp-bot/
+├── Whatsapp Bot.json          # Main n8n workflow
+└── docker-n8n/
+    ├── compose.yaml           # Docker Compose configuration
+    ├── env.example            # Environment variables template
+    └── local-files/           # Local file storage
+```
+
+## ⚙️ Credential Configuration
+
+### 🔐 Required Credentials
+
+| Parameter                              | Placeholder                                  | Description                          |
+| -------------------------------------- | -------------------------------------------- | ------------------------------------ |
+| **WhatsApp Trigger Credential ID**    | `YOUR_WHATSAPP_TRIGGER_CREDENTIAL_ID`        | WhatsApp OAuth credential for trigger |
+| **WhatsApp Credential ID**             | `YOUR_WHATSAPP_CREDENTIAL_ID`                | WhatsApp API credential              |
+| **WhatsApp Bearer Token Credential ID** | `YOUR_WHATSAPP_BEARER_TOKEN_CREDENTIAL_ID`  | Bearer token for media downloads     |
+| **WhatsApp Phone Number ID**           | `YOUR_WHATSAPP_PHONE_NUMBER_ID`              | Your WhatsApp Business phone number ID |
+| **OpenAI Credential ID**               | `YOUR_OPENAI_CREDENTIAL_ID`                  | OpenAI API credential                |
+| **WhatsApp Webhook ID**                | `YOUR_WHATSAPP_WEBHOOK_ID`                   | WhatsApp trigger webhook ID          |
+| **WhatsApp Send Webhook ID**           | `YOUR_WHATSAPP_SEND_WEBHOOK_ID`              | Webhook ID for sending messages      |
+| **WhatsApp Media Webhook ID**          | `YOUR_WHATSAPP_MEDIA_WEBHOOK_ID`             | Webhook ID for media operations      |
+| **Instance ID**                        | `YOUR_INSTANCE_ID`                           | Your n8n instance ID                 |
+
+### WhatsApp Business API Setup
+
+1. **Create a Meta Business Account**:
+   - Go to [business.facebook.com](https://business.facebook.com/)
+   - Create or access your business account
+
+2. **Set up WhatsApp Business API**:
+   - Navigate to **WhatsApp** in Meta Business Suite
+   - Create a WhatsApp Business Account
+   - Get your **Phone Number ID** from the dashboard
+
+3. **Get Access Token**:
+   - Go to **System Users** → **WhatsApp**
+   - Create a system user with WhatsApp permissions
+   - Generate a **Permanent Access Token**
+   - This token is used for the Bearer Auth credential
+
+4. **Configure Webhook**:
+   - In Meta Business Suite, configure webhook URL
+   - Point to your n8n instance webhook endpoint
+   - Subscribe to `messages` events
+
+5. **Configure in n8n**:
+   - Create **WhatsApp Trigger** credential with OAuth
+   - Create **WhatsApp** credential with your access token
+   - Create **HTTP Bearer Auth** credential with your access token (for media downloads)
+   - Enter your **Phone Number ID** in the send message nodes
+
+### OpenAI Configuration
+
+The workflow uses OpenAI for:
+- **Chat Model**: `gpt-4.1-mini` (for text responses)
+- **Vision Model**: `gpt-4o` (for image analysis)
+- **Whisper**: Audio transcription
+- **TTS**: Text-to-speech (voice: "nova", format: "opus")
+
+### Features
+
+- 💬 **Multi-modal Support** - Text, image, document, and voice messages
+- 🧠 **AI-Powered** - OpenAI GPT-4.1-mini for intelligent responses
+- 👁️ **Image Analysis** - GPT-4o Vision for image understanding
+- 📄 **Document Processing** - Handles image documents
+- 🎤 **Voice Transcription** - OpenAI Whisper for voice-to-text
+- 🔊 **Text-to-Speech** - OpenAI TTS for voice responses
+- 💾 **Conversation Memory** - Maintains context per user (10 messages)
+- 📱 **WhatsApp Integration** - Native WhatsApp Business API support
+
+### Message Types Supported
+
+1. **Text Messages**:
+   - General knowledge questions
+   - Conversational responses
+   - Context-aware (remembers last 10 messages per user)
+
+2. **Image Messages**:
+   - Automatic image analysis
+   - Extracts information from images
+   - Can use image caption if provided
+   - Responds with AI-generated insights
+
+3. **Image Documents**:
+   - Handles images sent as documents
+   - Analyzes document images
+   - Processes captions
+
+4. **Voice Messages**:
+   - Automatic transcription
+   - Processes as text message
+   - Can respond with text or audio (OpenAI TTS)
+
+### AI Agent System Prompt
+
+The bot is configured as a general knowledge assistant:
+
+```
+You are a helpful assistant that help people with general knowledge questions.
+
+You can receive information from an AI that analyze the image. If there is no 
+information in the AI section, then answer the prompt with the information 
+that you know.
+
+You can also receive messages or userPrompts that are transcript using AI, 
+the userPrompt can come from an audio file.
+
+## Image analyzed by AI:
+{{ $json.ai }}
+```
+
+### Use Cases
+
+- **Customer Support Bot**: Answer questions and provide assistance via WhatsApp
+- **Educational Assistant**: Help with general knowledge questions
+- **Image Analysis Bot**: Describe and analyze images sent by users
+- **Voice Assistant**: Voice-based interactions via WhatsApp
+- **Document Processing**: Analyze and respond to image documents
+- **Business Automation**: Automated customer service for WhatsApp Business
+
+---
+
 # 🛠️ General Requirements
 
 - [n8n](https://n8n.io/) (self-hosted or cloud)
@@ -2125,7 +2367,7 @@ The bot is configured as a general knowledge assistant:
 - 📊 Build complex workflows visually
 - 💻 Self-host for complete data control
 
-These workflows demonstrate n8n's capability to integrate multiple services (Google Sheets, external APIs, Gmail, PostgreSQL, Discord, Google Calendar, OpenAI, Firecrawl, Google Docs, Apify, Google Maps, LangChain Agents, Wikipedia, Google Gemini, Ollama, PGVector, Google Drive, RAG, ElevenLabs Voice AI, Telegram, Giphy) into seamless automation pipelines.
+These workflows demonstrate n8n's capability to integrate multiple services (Google Sheets, external APIs, Gmail, PostgreSQL, Discord, Google Calendar, OpenAI, Firecrawl, Google Docs, Apify, Google Maps, LangChain Agents, Wikipedia, Google Gemini, Ollama, PGVector, Google Drive, RAG, ElevenLabs Voice AI, Telegram, Giphy, WhatsApp Business API) into seamless automation pipelines.
 
 ---
 
