@@ -6,7 +6,7 @@ A collection of **n8n automation workflow examples** ready to import and use. Th
 > [n8n](https://n8n.io/) is a powerful workflow automation tool that allows you to connect different services and automate tasks without writing code. This repository contains exportable workflows that you can import directly into your n8n instance.
 
 ![n8n](https://img.shields.io/badge/n8n-workflow-FF6D5A?style=for-the-badge&logo=n8n&logoColor=white)
-![Examples](https://img.shields.io/badge/Examples-11-blue?style=for-the-badge)
+![Examples](https://img.shields.io/badge/Examples-12-blue?style=for-the-badge)
 ![Google Sheets](https://img.shields.io/badge/Google%20Sheets-34A853?style=for-the-badge&logo=google-sheets&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)
@@ -32,6 +32,7 @@ A collection of **n8n automation workflow examples** ready to import and use. Th
 | 12  | [RAG Standard System](#-rag-standard-system)      | `RAG standard system.json`                      | RAG system with in-memory vector store for document Q&A                          |
 | 13  | [RAG Standard System PostgreSQL](#-rag-standard-system-postgresql) | `RAG standard system PostgreSQL.json` | RAG system with PostgreSQL PGVector for scalable document Q&A                  |
 | 14  | [Voice Agent](#-voice-agent)                      | `voice - agent/`                     | Voice AI agent with ElevenLabs for customer service via phone                  |
+| 15  | [Telegram Bot](#-telegram-bot)                    | `n8n-telegram-bot/`                  | AI-powered Telegram bot with text, image, and voice message support             |
 
 ---
 
@@ -1834,6 +1835,266 @@ The HTML file provides a simple interface for the ElevenLabs voice agent widget:
 
 ---
 
+# 💬 Telegram Bot
+
+An **n8n AI-powered Telegram bot** that provides intelligent conversational assistance with support for **text messages**, **image analysis**, and **voice messages**. The bot uses OpenAI for natural language understanding and can respond with text or voice.
+
+![Telegram](https://img.shields.io/badge/Telegram-26A5E4?style=for-the-badge&logo=telegram&logoColor=white)
+![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white)
+![ElevenLabs](https://img.shields.io/badge/ElevenLabs-Voice%20AI-00A67E?style=for-the-badge)
+![Giphy](https://img.shields.io/badge/Giphy-FF6B9D?style=for-the-badge&logo=giphy&logoColor=white)
+
+## 📋 Description
+
+This workflow creates a comprehensive Telegram bot that:
+
+1. **Text Messages**: 
+   - Responds to `/start` command with a welcome sticker from Giphy
+   - Processes general knowledge questions using AI Agent
+   - Maintains conversation context per chat (10 messages memory)
+
+2. **Image Messages**:
+   - Downloads and analyzes images using OpenAI Vision (GPT-4o)
+   - Extracts information from images
+   - Responds with AI-generated insights about the image
+
+3. **Voice Messages**:
+   - Transcribes voice messages using OpenAI Whisper
+   - Processes transcribed text with AI Agent
+   - Responds with text or converts response to speech using ElevenLabs
+
+The bot is designed as a **general knowledge assistant** that helps users with questions and can understand context from images and voice messages.
+
+## 🔄 Workflow Flow
+
+```
+┌────────────────────┐
+│ Telegram Trigger   │
+│ (Message Received) │
+└────────────────────┘
+         │
+         ▼
+┌────────────────────┐
+│ What kind of       │
+│ message is it?     │
+│ (Switch)           │
+└────────────────────┘
+    │    │    │    │
+    │    │    │    └───▶ Voice Message
+    │    │    │
+    │    │    └────────▶ Image Message
+    │    │
+    │    └─────────────▶ Text Message
+    │
+    └──────────────────▶ /start Command
+         │
+         ▼
+┌────────────────────┐    ┌────────────────────┐    ┌────────────────────┐
+│ Get Sticker        │───▶│ Download Sticker  │───▶│ Send Sticker      │
+│ (Giphy API)       │    │                    │    │                    │
+└────────────────────┘    └────────────────────┘    └────────────────────┘
+
+Text Message Flow:
+┌────────────────────┐    ┌────────────────────┐    ┌────────────────────┐
+│ Writing            │───▶│ Message Fields     │───▶│ Unify Information │
+│ (Chat Action)     │    │                    │    │                    │
+└────────────────────┘    └────────────────────┘    └────────────────────┘
+                                                              │
+                                                              ▼
+┌────────────────────┐    ┌────────────────────┐    ┌────────────────────┐
+│ AI Agent           │───▶│ Is it audio?      │───▶│ Send Text Message │
+│ (LangChain)        │    │                    │    │                    │
+└────────────────────┘    └────────────────────┘    └────────────────────┘
+         │                           │
+         │                           │ YES
+         │                           ▼
+         │              ┌────────────────────┐    ┌────────────────────┐
+         │              │ Convert Text to    │───▶│ Send Audio File    │
+         │              │ Speech (ElevenLabs)│    │                    │
+         │              └────────────────────┘    └────────────────────┘
+
+Image Message Flow:
+┌────────────────────┐    ┌────────────────────┐    ┌────────────────────┐
+│ Select Higher      │───▶│ Download Image     │───▶│ Analyze Image      │
+│ Resolution Image   │    │                    │    │ (OpenAI Vision)    │
+└────────────────────┘    └────────────────────┘    └────────────────────┘
+                                                              │
+                                                              ▼
+┌────────────────────┐    ┌────────────────────┐    ┌────────────────────┐
+│ Image Data         │───▶│ Unify Information │───▶│ AI Agent           │
+│                    │    │                    │    │                    │
+└────────────────────┘    └────────────────────┘    └────────────────────┘
+
+Voice Message Flow:
+┌────────────────────┐    ┌────────────────────┐    ┌────────────────────┐
+│ Recording Audio    │───▶│ Download Audio      │───▶│ Transcribe Audio   │
+│ (Chat Action)      │    │                    │    │ (OpenAI Whisper)    │
+└────────────────────┘    └────────────────────┘    └────────────────────┘
+                                                              │
+                                                              ▼
+┌────────────────────┐    ┌────────────────────┐    ┌────────────────────┐
+│ Audio Data         │───▶│ Unify Information │───▶│ AI Agent           │
+│                    │    │                    │    │                    │
+└────────────────────┘    └────────────────────┘    └────────────────────┘
+```
+
+## 📁 Project Structure
+
+```
+n8n-telegram-bot/
+├── Telegram bot.json          # Main n8n workflow
+└── docker-n8n/
+    ├── compose.yaml           # Docker Compose configuration
+    └── local-files/           # Local file storage
+```
+
+## ⚙️ Credential Configuration
+
+### 🔐 Required Credentials
+
+| Parameter                        | Placeholder                          | Description                          |
+| -------------------------------- | ------------------------------------ | ------------------------------------ |
+| **Telegram Credential ID**       | `YOUR_TELEGRAM_CREDENTIAL_ID`        | Telegram Bot API token               |
+| **Telegram Webhook ID**          | `YOUR_TELEGRAM_WEBHOOK_ID`           | Telegram trigger webhook ID          |
+| **OpenAI Credential ID**         | `YOUR_OPENAI_CREDENTIAL_ID`         | OpenAI API credential                 |
+| **ElevenLabs Credential ID**      | `YOUR_ELEVENLABS_CREDENTIAL_ID`      | ElevenLabs API credential             |
+| **ElevenLabs Voice ID**          | `YOUR_ELEVENLABS_VOICE_ID`           | ElevenLabs voice ID for TTS          |
+| **Giphy API Key**                | `YOUR_GIPHY_API_KEY`                 | Giphy API key for stickers           |
+| **Webhook IDs**                  | `YOUR_WEBHOOK_ID_1` to `_6`          | Various webhook IDs for nodes         |
+| **Instance ID**                  | `YOUR_INSTANCE_ID`                   | Your n8n instance ID                 |
+
+### Telegram Bot Setup
+
+1. **Create a Telegram Bot**:
+   - Talk to [@BotFather](https://t.me/botfather) on Telegram
+   - Use `/newbot` command to create a new bot
+   - Copy the bot token
+
+2. **Configure in n8n**:
+   - Go to **Credentials** → **New**
+   - Select **Telegram**
+   - Enter your bot token
+   - Save the credential ID
+
+3. **Set Webhook**:
+   - The Telegram trigger node will automatically set up the webhook
+   - Ensure your n8n instance is publicly accessible (or use ngrok for local development)
+
+### OpenAI Configuration
+
+The workflow uses OpenAI for:
+- **Chat Model**: `gpt-4.1-mini` (for text responses)
+- **Vision Model**: `chatgpt-4o-latest` (for image analysis)
+- **Whisper**: Audio transcription
+
+### ElevenLabs Configuration
+
+1. **Get API Key**:
+   - Sign up at [elevenlabs.io](https://elevenlabs.io/)
+   - Get your API key from the dashboard
+
+2. **Get Voice ID**:
+   - Navigate to Voice Library
+   - Select a voice (e.g., "Sofía - Natural and Conversational")
+   - Copy the Voice ID
+
+3. **Configure in n8n**:
+   - Create ElevenLabs credential with your API key
+   - Update the voice ID in the "Convert text to speech" node
+
+### Giphy API Setup
+
+1. **Get API Key**:
+   - Sign up at [developers.giphy.com](https://developers.giphy.com/)
+   - Create an app and get your API key
+
+2. **Update Workflow**:
+   - Replace `YOUR_GIPHY_API_KEY` in the "Get Sticker" node
+
+### Docker Deployment (Optional)
+
+The `docker-n8n/compose.yaml` file provides a production-ready setup with:
+- **Traefik** reverse proxy
+- **SSL/TLS** certificates via Let's Encrypt
+- **n8n** with persistent storage
+
+To deploy:
+
+1. Create a `.env` file:
+   ```env
+   SUBDOMAIN=n8n
+   DOMAIN_NAME=yourdomain.com
+   SSL_EMAIL=your-email@example.com
+   GENERIC_TIMEZONE=America/New_York
+   ```
+
+2. Start services:
+   ```bash
+   docker-compose up -d
+   ```
+
+## 🎯 Bot Features
+
+### Message Types Supported
+
+1. **`/start` Command**:
+   - Sends a welcome sticker from Giphy
+   - Tag: "hola"
+
+2. **Text Messages**:
+   - General knowledge questions
+   - Conversational responses
+   - Context-aware (remembers last 10 messages per chat)
+
+3. **Image Messages**:
+   - Automatic image analysis
+   - Extracts information from images
+   - Can use image caption if provided
+   - Responds with AI-generated insights
+
+4. **Voice Messages**:
+   - Automatic transcription
+   - Processes as text message
+   - Can respond with text or voice (ElevenLabs TTS)
+
+### AI Agent System Prompt
+
+The bot is configured as a general knowledge assistant:
+
+```
+## Descripción
+- Eres un asistente que ayuda a las personas con problemas de cultura general
+- Tus respuestas deben de ser muy cortas, 1 o 2 lineas máximo
+
+- A veces recibirás textos de imágenes previamente analizadas por otro AI, 
+  la respuesta no ha sido enviada al usuario, tu labor sería enviarle 
+  ese mensaje al usuario.
+
+## Tools
+"send_telegram" te permite enviar mensajes de telegram
+```
+
+### Features
+
+- 💬 **Multi-modal Support** - Text, image, and voice messages
+- 🧠 **AI-Powered** - OpenAI GPT-4.1-mini for intelligent responses
+- 👁️ **Image Analysis** - GPT-4o Vision for image understanding
+- 🎤 **Voice Transcription** - OpenAI Whisper for voice-to-text
+- 🔊 **Text-to-Speech** - ElevenLabs for voice responses
+- 🎭 **Sticker Support** - Giphy integration for fun interactions
+- 💾 **Conversation Memory** - Maintains context per chat (10 messages)
+- 🔄 **Chat Actions** - Shows "typing" and "recording audio" indicators
+
+### Use Cases
+
+- **Customer Support Bot**: Answer questions and provide assistance
+- **Educational Assistant**: Help with general knowledge questions
+- **Image Analysis Bot**: Describe and analyze images
+- **Voice Assistant**: Voice-based interactions via Telegram
+- **Entertainment Bot**: Fun interactions with stickers and AI responses
+
+---
+
 # 🛠️ General Requirements
 
 - [n8n](https://n8n.io/) (self-hosted or cloud)
@@ -1864,7 +2125,7 @@ The HTML file provides a simple interface for the ElevenLabs voice agent widget:
 - 📊 Build complex workflows visually
 - 💻 Self-host for complete data control
 
-These workflows demonstrate n8n's capability to integrate multiple services (Google Sheets, external APIs, Gmail, PostgreSQL, Discord, Google Calendar, OpenAI, Firecrawl, Google Docs, Apify, Google Maps, LangChain Agents, Wikipedia, Google Gemini, Ollama, PGVector, Google Drive, RAG, ElevenLabs Voice AI) into seamless automation pipelines.
+These workflows demonstrate n8n's capability to integrate multiple services (Google Sheets, external APIs, Gmail, PostgreSQL, Discord, Google Calendar, OpenAI, Firecrawl, Google Docs, Apify, Google Maps, LangChain Agents, Wikipedia, Google Gemini, Ollama, PGVector, Google Drive, RAG, ElevenLabs Voice AI, Telegram, Giphy) into seamless automation pipelines.
 
 ---
 
